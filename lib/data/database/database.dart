@@ -1,0 +1,480 @@
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+
+/// 应用数据库
+class AppDatabase {
+  static Database? _db;
+
+  static Future<Database> get database async {
+    if (_db != null) return _db!;
+    _db = await _initDb();
+    return _db!;
+  }
+
+  static Future<Database> _initDb() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final path = p.join(dir.path, 'dyanalytics.db');
+    return await openDatabase(
+      path,
+      version: 4,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE videos (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            cover_url TEXT,
+            create_time INTEGER NOT NULL,
+            duration REAL,
+            video_url TEXT,
+            is_top INTEGER DEFAULT 0,
+            source TEXT DEFAULT '',
+            source_id TEXT DEFAULT ''
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE video_metrics (
+            video_id TEXT PRIMARY KEY,
+            play_count INTEGER DEFAULT 0,
+            like_count INTEGER DEFAULT 0,
+            comment_count INTEGER DEFAULT 0,
+            share_count INTEGER DEFAULT 0,
+            collect_count INTEGER DEFAULT 0,
+            finish_rate REAL,
+            avg_watch_duration REAL,
+            two_second_exit_rate REAL DEFAULT 0,
+            cover_ctr REAL DEFAULT 0,
+            profile_visits INTEGER DEFAULT 0,
+            full_play_count INTEGER DEFAULT 0,
+            five_second_finish_rate REAL DEFAULT 0,
+            traffic_recommend REAL,
+            traffic_search REAL,
+            traffic_follow REAL,
+            traffic_city REAL,
+            audience_male_ratio REAL,
+            audience_age_dist TEXT,
+            audience_region_dist TEXT,
+            audience_tgi TEXT,
+            fetched_at INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            updated_at INTEGER DEFAULT 0,
+            FOREIGN KEY (video_id) REFERENCES videos(id)
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE csv_imports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            file_name TEXT NOT NULL,
+            file_path TEXT DEFAULT '',
+            row_count INTEGER DEFAULT 0,
+            imported_count INTEGER DEFAULT 0,
+            skipped_count INTEGER DEFAULT 0,
+            imported_at INTEGER NOT NULL,
+            file_hash TEXT DEFAULT ''
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE feishu_config (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE douyin_auth (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''CREATE TABLE IF NOT EXISTS feishu_config (key TEXT PRIMARY KEY, value TEXT NOT NULL)''');
+          await db.execute('''CREATE TABLE IF NOT EXISTS douyin_auth (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)''');
+        }
+        if (oldVersion < 3) {
+          final cols = await db.rawQuery("PRAGMA table_info('videos')");
+          final colNames = cols.map((c) => c['name']).toSet();
+          if (!colNames.contains('is_top')) await db.execute("ALTER TABLE videos ADD COLUMN is_top INTEGER DEFAULT 0");
+          if (!colNames.contains('source')) await db.execute("ALTER TABLE videos ADD COLUMN source TEXT DEFAULT ''");
+          if (!colNames.contains('source_id')) await db.execute("ALTER TABLE videos ADD COLUMN source_id TEXT DEFAULT ''");
+          final mcols = await db.rawQuery("PRAGMA table_info('video_metrics')");
+          final mcolNames = mcols.map((c) => c['name']).toSet();
+          if (!mcolNames.contains('updated_at')) await db.execute("ALTER TABLE video_metrics ADD COLUMN updated_at INTEGER DEFAULT 0");
+          final icols = await db.rawQuery("PRAGMA table_info('csv_imports')");
+          final icolNames = icols.map((c) => c['name']).toSet();
+          if (!icolNames.contains('file_path')) await db.execute("ALTER TABLE csv_imports ADD COLUMN file_path TEXT DEFAULT ''");
+          if (!icolNames.contains('row_count')) await db.execute("ALTER TABLE csv_imports ADD COLUMN row_count INTEGER DEFAULT 0");
+          if (!icolNames.contains('imported_count')) await db.execute("ALTER TABLE csv_imports ADD COLUMN imported_count INTEGER DEFAULT 0");
+          if (!icolNames.contains('skipped_count')) await db.execute("ALTER TABLE csv_imports ADD COLUMN skipped_count INTEGER DEFAULT 0");
+        }
+        if (oldVersion < 4) {
+          final mcols = await db.rawQuery("PRAGMA table_info('video_metrics')");
+          final mcolNames = mcols.map((c) => c['name']).toSet();
+          if (!mcolNames.contains('two_second_exit_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN two_second_exit_rate REAL DEFAULT 0");
+          if (!mcolNames.contains('cover_ctr')) await db.execute("ALTER TABLE video_metrics ADD COLUMN cover_ctr REAL DEFAULT 0");
+          if (!mcolNames.contains('profile_visits')) await db.execute("ALTER TABLE video_metrics ADD COLUMN profile_visits INTEGER DEFAULT 0");
+          if (!mcolNames.contains('full_play_count')) await db.execute("ALTER TABLE video_metrics ADD COLUMN full_play_count INTEGER DEFAULT 0");
+          if (!mcolNames.contains('five_second_finish_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN five_second_finish_rate REAL DEFAULT 0");
+        }
+      },
+    );
+  }
+
+  // ========== Videos ==========
+
+  Future<void> insertVideo(Map<String, dynamic> data) async {
+    final db = await AppDatabase.database;
+    await db.insert('videos', {
+      'id': data['id'],
+      'title': data['title'] ?? '',
+      'cover_url': data['cover_url'] ?? '',
+      'create_time': data['create_time'] ?? 0,
+      'is_top': data['is_top'] ?? 0,
+      'source': data['source'] ?? '',
+      'source_id': data['source_id'] ?? '',
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> upsertVideo({
+    required String id,
+    required String title,
+    String? coverUrl,
+    required int createTime,
+    double? duration,
+    String? videoUrl,
+    int isTop = 0,
+    String source = '',
+    String sourceId = '',
+  }) async {
+    final db = await AppDatabase.database;
+    await db.insert('videos', {
+      'id': id,
+      'title': title,
+      'cover_url': coverUrl,
+      'create_time': createTime,
+      'duration': duration,
+      'video_url': videoUrl,
+      'is_top': isTop,
+      'source': source,
+      'source_id': sourceId,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllVideos({String? orderBy}) async {
+    final db = await AppDatabase.database;
+    if (orderBy == 'plays') {
+      return await db.rawQuery('SELECT v.* FROM videos v LEFT JOIN video_metrics m ON m.video_id = v.id ORDER BY m.play_count DESC');
+    } else if (orderBy == 'likes') {
+      return await db.rawQuery('SELECT v.* FROM videos v LEFT JOIN video_metrics m ON m.video_id = v.id ORDER BY m.like_count DESC');
+    }
+    return await db.query('videos', orderBy: 'create_time DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getAllVideosWithMetrics({String? orderBy}) async {
+    final db = await AppDatabase.database;
+    String orderClause = 'v.create_time DESC';
+    if (orderBy == 'plays') orderClause = 'COALESCE(m.play_count, 0) DESC';
+    if (orderBy == 'likes') orderClause = 'COALESCE(m.like_count, 0) DESC';
+    if (orderBy == 'finish_rate') orderClause = 'COALESCE(m.finish_rate, 0) DESC';
+    if (orderBy == 'interaction') orderClause = 'COALESCE(m.like_count, 0) + COALESCE(m.comment_count, 0) + COALESCE(m.share_count, 0) DESC';
+    return await db.rawQuery('''
+      SELECT v.*, 
+        m.play_count, m.like_count, m.comment_count, m.share_count, m.collect_count,
+        m.finish_rate, m.avg_watch_duration, m.two_second_exit_rate, m.cover_ctr,
+        m.profile_visits, m.full_play_count, m.five_second_finish_rate,
+        m.traffic_recommend, m.traffic_search, m.traffic_follow, m.traffic_city,
+        m.audience_male_ratio, m.audience_age_dist, m.audience_region_dist, m.audience_tgi,
+        m.fetched_at, m.source as metric_source, m.updated_at
+      FROM videos v
+      LEFT JOIN video_metrics m ON m.video_id = v.id
+      ORDER BY $orderClause
+    ''');
+  }
+
+  Future<Map<String, dynamic>?> getVideoById(String id) async {
+    final db = await AppDatabase.database;
+    final results = await db.query('videos', where: 'id = ?', whereArgs: [id]);
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  // ========== VideoMetrics ==========
+
+  Future<void> upsertVideoMetrics(Map<String, dynamic> data) async {
+    final db = await AppDatabase.database;
+    final videoId = data['video_id'];
+    final existing = await db.query('video_metrics', where: 'video_id = ?', whereArgs: [videoId]);
+    if (existing.isNotEmpty) {
+      await db.update('video_metrics', data, where: 'video_id = ?', whereArgs: [videoId]);
+    } else {
+      await db.insert('video_metrics', data);
+    }
+  }
+
+  Future<void> upsertMetrics({
+    required String videoId,
+    int? playCount,
+    int? likeCount,
+    int? commentCount,
+    int? shareCount,
+    int? collectCount,
+    double? finishRate,
+    double? avgWatchDuration,
+    double? twoSecondExitRate,
+    double? coverCtr,
+    int? profileVisits,
+    int? fullPlayCount,
+    double? fiveSecondFinishRate,
+    double? trafficRecommend,
+    double? trafficSearch,
+    double? trafficFollow,
+    double? trafficCity,
+    double? audienceMaleRatio,
+    String? audienceAgeDist,
+    String? audienceRegionDist,
+    String? audienceTgi,
+    required int fetchedAt,
+    required String source,
+  }) async {
+    final db = await AppDatabase.database;
+    final existing = await db.query('video_metrics', where: 'video_id = ?', whereArgs: [videoId]);
+    if (existing.isNotEmpty) {
+      final u = <String, dynamic>{};
+      if (playCount != null) u['play_count'] = playCount;
+      if (likeCount != null) u['like_count'] = likeCount;
+      if (commentCount != null) u['comment_count'] = commentCount;
+      if (shareCount != null) u['share_count'] = shareCount;
+      if (collectCount != null) u['collect_count'] = collectCount;
+      if (finishRate != null) u['finish_rate'] = finishRate;
+      if (avgWatchDuration != null) u['avg_watch_duration'] = avgWatchDuration;
+      if (twoSecondExitRate != null) u['two_second_exit_rate'] = twoSecondExitRate;
+      if (coverCtr != null) u['cover_ctr'] = coverCtr;
+      if (profileVisits != null) u['profile_visits'] = profileVisits;
+      if (fullPlayCount != null) u['full_play_count'] = fullPlayCount;
+      if (fiveSecondFinishRate != null) u['five_second_finish_rate'] = fiveSecondFinishRate;
+      if (trafficRecommend != null) u['traffic_recommend'] = trafficRecommend;
+      if (trafficSearch != null) u['traffic_search'] = trafficSearch;
+      if (trafficFollow != null) u['traffic_follow'] = trafficFollow;
+      if (trafficCity != null) u['traffic_city'] = trafficCity;
+      if (audienceMaleRatio != null) u['audience_male_ratio'] = audienceMaleRatio;
+      if (audienceAgeDist != null) u['audience_age_dist'] = audienceAgeDist;
+      if (audienceRegionDist != null) u['audience_region_dist'] = audienceRegionDist;
+      if (audienceTgi != null) u['audience_tgi'] = audienceTgi;
+      u['fetched_at'] = fetchedAt;
+      u['source'] = source;
+      if (u.isNotEmpty) {
+        await db.update('video_metrics', u, where: 'video_id = ?', whereArgs: [videoId]);
+      }
+    } else {
+      await db.insert('video_metrics', {
+        'video_id': videoId,
+        'play_count': playCount ?? 0,
+        'like_count': likeCount ?? 0,
+        'comment_count': commentCount ?? 0,
+        'share_count': shareCount ?? 0,
+        'collect_count': collectCount ?? 0,
+        'finish_rate': finishRate,
+        'avg_watch_duration': avgWatchDuration,
+        'two_second_exit_rate': twoSecondExitRate ?? 0,
+        'cover_ctr': coverCtr ?? 0,
+        'profile_visits': profileVisits ?? 0,
+        'full_play_count': fullPlayCount ?? 0,
+        'five_second_finish_rate': fiveSecondFinishRate ?? 0,
+        'traffic_recommend': trafficRecommend,
+        'traffic_search': trafficSearch,
+        'traffic_follow': trafficFollow,
+        'traffic_city': trafficCity,
+        'audience_male_ratio': audienceMaleRatio,
+        'audience_age_dist': audienceAgeDist,
+        'audience_region_dist': audienceRegionDist,
+        'audience_tgi': audienceTgi,
+        'fetched_at': fetchedAt,
+        'source': source,
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>?> getMetricsForVideo(String videoId) async {
+    final db = await AppDatabase.database;
+    final results = await db.query('video_metrics', where: 'video_id = ?', whereArgs: [videoId]);
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Get channel-level aggregated statistics
+  Future<Map<String, dynamic>> getChannelStats() async {
+    final db = await AppDatabase.database;
+    final totalVideos = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM videos')) ?? 0;
+    if (totalVideos == 0) {
+      return {
+        'total_videos': 0,
+        'total_plays': 0,
+        'total_likes': 0,
+        'total_comments': 0,
+        'total_shares': 0,
+        'avg_likes': 0.0,
+        'avg_comments': 0.0,
+        'avg_shares': 0.0,
+        'avg_finish_rate': 0.0,
+        'avg_watch_duration': 0.0,
+        'avg_cover_ctr': 0.0,
+        'avg_two_second_exit_rate': 0.0,
+        'total_profile_visits': 0,
+        'total_full_plays': 0,
+      };
+    }
+    final stats = await db.rawQuery('''
+      SELECT 
+        COALESCE(SUM(m.play_count), 0) as total_plays,
+        COALESCE(SUM(m.like_count), 0) as total_likes,
+        COALESCE(SUM(m.comment_count), 0) as total_comments,
+        COALESCE(SUM(m.share_count), 0) as total_shares,
+        COALESCE(AVG(m.play_count), 0) as avg_plays,
+        COALESCE(AVG(m.like_count), 0) as avg_likes,
+        COALESCE(AVG(m.comment_count), 0) as avg_comments,
+        COALESCE(AVG(m.share_count), 0) as avg_shares,
+        COALESCE(AVG(m.finish_rate), 0) as avg_finish_rate,
+        COALESCE(AVG(m.avg_watch_duration), 0) as avg_watch_duration,
+        COALESCE(AVG(m.cover_ctr), 0) as avg_cover_ctr,
+        COALESCE(AVG(m.two_second_exit_rate), 0) as avg_two_second_exit_rate,
+        COALESCE(SUM(m.profile_visits), 0) as total_profile_visits,
+        COALESCE(SUM(m.full_play_count), 0) as total_full_plays
+      FROM video_metrics m
+      INNER JOIN videos v ON v.id = m.video_id
+    ''');
+    final row = stats.first;
+    return {
+      'total_videos': totalVideos,
+      'total_plays': (row['total_plays'] as int?) ?? 0,
+      'total_likes': (row['total_likes'] as int?) ?? 0,
+      'total_comments': (row['total_comments'] as int?) ?? 0,
+      'total_shares': (row['total_shares'] as int?) ?? 0,
+      'avg_likes': (row['avg_likes'] as double?) ?? 0.0,
+      'avg_comments': (row['avg_comments'] as double?) ?? 0.0,
+      'avg_shares': (row['avg_shares'] as double?) ?? 0.0,
+      'avg_finish_rate': (row['avg_finish_rate'] as double?) ?? 0.0,
+      'avg_watch_duration': (row['avg_watch_duration'] as double?) ?? 0.0,
+      'avg_cover_ctr': (row['avg_cover_ctr'] as double?) ?? 0.0,
+      'avg_two_second_exit_rate': (row['avg_two_second_exit_rate'] as double?) ?? 0.0,
+      'total_profile_visits': (row['total_profile_visits'] as int?) ?? 0,
+      'total_full_plays': (row['total_full_plays'] as int?) ?? 0,
+    };
+  }
+
+  // ========== CSV Imports ==========
+
+  Future<int> recordCsvImport({
+    required String fileName,
+    required int importedAt,
+    required int videoCount,
+    required String fileHash,
+  }) async {
+    final db = await AppDatabase.database;
+    return await db.insert('csv_imports', {
+      'file_name': fileName,
+      'imported_at': importedAt,
+      'imported_count': videoCount,
+      'file_hash': fileHash,
+    });
+  }
+
+  Future<void> insertCsvImport(Map<String, dynamic> data) async {
+    final db = await AppDatabase.database;
+    await db.insert('csv_imports', {
+      'file_name': data['file_name'] ?? '',
+      'file_path': data['file_path'] ?? '',
+      'row_count': data['row_count'] ?? 0,
+      'imported_count': data['imported_count'] ?? 0,
+      'skipped_count': data['skipped_count'] ?? 0,
+      'imported_at': data['imported_at'] ?? 0,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getImportHistory() async {
+    final db = await AppDatabase.database;
+    return await db.query('csv_imports', orderBy: 'imported_at DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getCsvImportHistory() async {
+    return await getImportHistory();
+  }
+
+  Future<Map<String, dynamic>?> findImportByHash(String fileHash) async {
+    final db = await AppDatabase.database;
+    final results = await db.query('csv_imports', where: 'file_hash = ?', whereArgs: [fileHash]);
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  // ========== Data Clear ==========
+
+  Future<void> clearAllData() async {
+    final db = await AppDatabase.database;
+    await db.delete('video_metrics');
+    await db.delete('videos');
+    await db.delete('csv_imports');
+  }
+
+  Future<void> clearAll() async => clearAllData();
+
+  Future<void> clearFeishuCache() async {
+    final db = await AppDatabase.database;
+    await db.delete('feishu_config', where: 'key = ?', whereArgs: ['token']);
+  }
+
+  // ========== 飞书配置 ==========
+
+  Future<String?> getFeishuConfig(String key) async {
+    final db = await AppDatabase.database;
+    final results = await db.query('feishu_config', where: 'key = ?', whereArgs: [key]);
+    return results.isNotEmpty ? results.first['value'] as String? : null;
+  }
+
+  Future<void> setFeishuConfig(String key, String value) async {
+    final db = await AppDatabase.database;
+    await db.insert('feishu_config', {'key': key, 'value': value}, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<Map<String, String>> getAllFeishuConfig() async {
+    final db = await AppDatabase.database;
+    final results = await db.query('feishu_config');
+    final map = <String, String>{};
+    for (final row in results) {
+      map[row['key'] as String] = row['value'] as String;
+    }
+    return map;
+  }
+
+  Future<void> deleteFeishuConfig(String key) async {
+    final db = await AppDatabase.database;
+    await db.delete('feishu_config', where: 'key = ?', whereArgs: [key]);
+  }
+
+  // ========== 抖音授权存储 ==========
+
+  Future<String?> getDouyinAuth(String key) async {
+    final db = await AppDatabase.database;
+    final results = await db.query('douyin_auth', where: 'key = ?', whereArgs: [key]);
+    return results.isNotEmpty ? results.first['value'] as String? : null;
+  }
+
+  Future<void> setDouyinAuth(String key, String value) async {
+    final db = await AppDatabase.database;
+    await db.insert('douyin_auth', {
+      'key': key, 'value': value,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteDouyinAuth(String key) async {
+    final db = await AppDatabase.database;
+    await db.delete('douyin_auth', where: 'key = ?', whereArgs: [key]);
+  }
+
+  Future<void> close() async {
+    final db = _db;
+    if (db != null) {
+      await db.close();
+      _db = null;
+    }
+  }
+}

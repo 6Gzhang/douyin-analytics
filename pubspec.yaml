@@ -1,0 +1,57 @@
+name: douyin_analytics
+description: 抖音数据分析工具 - 数码赛道创作者专用
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 状态管理
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  
+  # 数据库
+  sqflite: ^2.3.3
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  
+  # 路由
+  go_router: ^14.2.6
+  
+  # 网络
+  http: ^1.2.1
+  flutter_secure_storage: ^9.2.2
+  url_launcher: ^6.3.0
+  
+  # 图表
+  fl_chart: ^0.69.0
+  
+  # CSV 解析
+  csv: ^6.0.0
+  
+  # 工具
+  intl: ^0.19.0
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  file_picker: ^8.0.3
+  shared_preferences: ^2.3.2
+  
+  # UI
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/

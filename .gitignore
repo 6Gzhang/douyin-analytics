@@ -1,0 +1,40 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+flutter_build.log
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+*.xcworkspace/
+*.xcuserdata/
+
+# Windows
+*.exe
+*.dll
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Generated
+*.g.dart
+*.freezed.dart
+
+# Coverage
+coverage/
+
+# Temp
+*.tmp
+*.temp
+*~
