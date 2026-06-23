@@ -35,8 +35,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _loadAiConfig() async {
     final sp = await SharedPreferences.getInstance();
     setState(() {
-      _apiKey = sp.getString(SpKeys.dashscopeApiKey) ?? '';
-      _selectedModel = sp.getString(SpKeys.dashscopeModel) ?? SpKeys.defaultModel;
+      _apiKey = sp.getString(SpKeys.siliconflowApiKey) ?? '';
+      _selectedModel = sp.getString(SpKeys.siliconflowModel) ?? SpKeys.defaultModel;
       _aiUsageCount = sp.getInt(SpKeys.aiUsageCount) ?? 0;
       _aiEstimatedTokens = sp.getInt(SpKeys.aiEstimatedTokens) ?? 0;
     });
@@ -197,7 +197,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
-  // ---- 清除缓存 ----
+  // ---- AI 配置 ----
   Widget _buildAiConfigSection() {
     return Card(
       child: Padding(
@@ -208,10 +208,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             // API Key
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('阿里云百炼 API Key'),
+              title: const Text('硅基流动 API Key'),
               subtitle: Text(_apiKey.isNotEmpty
                   ? '${_apiKey.substring(0, 8)}****${_apiKey.length > 12 ? _apiKey.substring(_apiKey.length - 4) : ""}'
-                  : '未设置',
+                  : '未设置（免费使用 Qwen2.5-7B）',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               trailing: TextButton(
                 onPressed: _editApiKey,
@@ -228,9 +228,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 value: _selectedModel,
                 underline: const SizedBox(),
                 items: const [
-                  DropdownMenuItem(value: 'qwen-turbo', child: Text('Turbo')),
-                  DropdownMenuItem(value: 'qwen-plus', child: Text('Plus')),
-                  DropdownMenuItem(value: 'qwen-max', child: Text('Max')),
+                  DropdownMenuItem(value: 'Qwen/Qwen2.5-7B-Instruct', child: Text('Qwen 2.5 7B (免费)')),
+                  DropdownMenuItem(value: 'Qwen/Qwen2.5-14B-Instruct', child: Text('Qwen 2.5 14B')),
+                  DropdownMenuItem(value: 'Qwen/Qwen2.5-72B-Instruct', child: Text('Qwen 2.5 72B')),
                 ],
                 onChanged: (v) {
                   if (v != null) _setModel(v);
@@ -248,6 +248,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     style: TextStyle(fontSize: 12, color: Colors.grey[600])),
               ],
             ),
+            const SizedBox(height: 8),
+            Text('免费模型 Qwen2.5-7B 永久免费，注册送积分',
+                style: TextStyle(fontSize: 11, color: Colors.grey[500])),
           ],
         ),
       ),
@@ -256,9 +259,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   String _modelDisplayName() {
     switch (_selectedModel) {
-      case 'qwen-turbo': return 'Qwen Turbo (轻量)';
-      case 'qwen-plus': return 'Qwen Plus (推荐)';
-      case 'qwen-max': return 'Qwen Max (最強)';
+      case 'Qwen/Qwen2.5-7B-Instruct': return 'Qwen 2.5 7B (免费)';
+      case 'Qwen/Qwen2.5-14B-Instruct': return 'Qwen 2.5 14B';
+      case 'Qwen/Qwen2.5-72B-Instruct': return 'Qwen 2.5 72B';
       default: return _selectedModel;
     }
   }
@@ -273,7 +276,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           controller: ctrl,
           decoration: const InputDecoration(
             hintText: 'sk-xxxxxxxxxxxxxxxx',
-            labelText: '阿里云百炼 DashScope API Key',
+            labelText: '硅基流动 SiliconFlow API Key',
           ),
           obscureText: true,
         ),
@@ -285,7 +288,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
     if (result != null && mounted) {
       final sp = await SharedPreferences.getInstance();
-      await sp.setString(SpKeys.dashscopeApiKey, result);
+      await sp.setString(SpKeys.siliconflowApiKey, result);
       AiService.instance.updateApiKey(result);
       setState(() => _apiKey = result);
     }
@@ -293,7 +296,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _setModel(String model) async {
     final sp = await SharedPreferences.getInstance();
-    await sp.setString(SpKeys.dashscopeModel, model);
+    await sp.setString(SpKeys.siliconflowModel, model);
     AiService.instance.setModel(model);
     setState(() => _selectedModel = model);
   }

@@ -157,52 +157,36 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push('/video/${v['id']}'),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 72,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.play_circle_outline,
-                    size: 28, color: Colors.grey),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 6),
+                  Text(date,
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[500])),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _statChip(Icons.play_arrow, formatCount(playCount)),
+                      const SizedBox(width: 12),
+                      _statChip(Icons.favorite, formatCount(likeCount)),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 6),
-                    Text(date,
-                        style: TextStyle(
-                            fontSize: 11, color: Colors.grey[500])),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _statChip(Icons.play_arrow, formatCount(playCount)),
-                        const SizedBox(width: 12),
-                        _statChip(Icons.favorite, formatCount(likeCount)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

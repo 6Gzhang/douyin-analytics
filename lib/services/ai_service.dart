@@ -6,30 +6,30 @@ class AiService {
   AiService._();
   static final AiService instance = AiService._();
 
-  static const String _endpoint =
-      'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-  static const String _defaultModel = 'qwen-plus';
+  // SiliconFlow API (免费 Qwen2.5-7B)
+  static const String _endpoint = 'https://api.siliconflow.cn/v1/chat/completions';
+  static const String _defaultModel = 'Qwen/Qwen2.5-7B-Instruct';
 
   Future<String?> _getApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('dashscope_api_key');
+    return prefs.getString('siliconflow_api_key');
   }
 
   Future<String> _getModel() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('dashscope_model') ?? _defaultModel;
+    return prefs.getString('siliconflow_model') ?? _defaultModel;
   }
 
   /// Update API key (called from settings page)
   Future<void> updateApiKey(String key) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('dashscope_api_key', key);
+    await prefs.setString('siliconflow_api_key', key);
   }
 
   /// Set model (called from settings page)
   Future<void> setModel(String model) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('dashscope_model', model);
+    await prefs.setString('siliconflow_model', model);
   }
 
   /// Increase AI usage counter
@@ -50,7 +50,7 @@ class AiService {
   Future<String> chat(String systemPrompt, String userMessage) async {
     final apiKey = await _getApiKey();
     if (apiKey == null || apiKey.isEmpty) {
-      return '请先在设置页配置阿里云百炼 API Key（免费注册送 100 万 Tokens）。';
+      return '请先在设置页配置硅基流动 API Key（免费使用 Qwen2.5-7B）。';
     }
     final model = await _getModel();
 
@@ -68,7 +68,7 @@ class AiService {
             {'role': 'user', 'content': userMessage},
           ],
         }),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -83,10 +83,10 @@ class AiService {
             body['message'] as String? ??
             'HTTP ${response.statusCode}';
         if (response.statusCode == 401 || response.statusCode == 403) {
-          return 'API Key 无效或已过期，请在设置页更新阿里云百炼 API Key。';
+          return 'API Key 无效或已过期，请在设置页更新硅基流动 API Key。';
         }
         if (msg.contains('quota') || msg.contains('insufficient')) {
-          return 'API 额度已耗尽，请前往阿里云百炼控制台查看用量。';
+          return 'API 额度已耗尽，请前往硅基流动控制台查看用量。';
         }
         return 'AI 服务请求失败: $msg';
       }

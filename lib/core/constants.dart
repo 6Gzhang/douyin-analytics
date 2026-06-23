@@ -33,7 +33,9 @@ class SpKeys {
   static const String hideTutorial = 'hide_tutorial';
   static const String dashscopeApiKey = 'dashscope_api_key';
   static const String dashscopeModel = 'dashscope_model';
+  static const String siliconflowApiKey = 'siliconflow_api_key';
+  static const String siliconflowModel = 'siliconflow_model';
   static const String aiUsageCount = 'ai_usage_count';
   static const String aiEstimatedTokens = 'ai_estimated_tokens';
-  static const String defaultModel = 'qwen-plus';
+  static const String defaultModel = 'Qwen/Qwen2.5-7B-Instruct';
 }
