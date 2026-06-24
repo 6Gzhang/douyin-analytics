@@ -107,7 +107,9 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
             try {
               final dt = DateTime.tryParse(metric.publishDate);
               if (dt != null) createTime = dt.millisecondsSinceEpoch ~/ 1000;
-            } catch (_) {}
+            } catch (e) {
+              print('解析发布日期失败: ${metric.publishDate}, 错误: $e');
+            }
           }
           
           await _db.insertVideo({
@@ -222,7 +224,7 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.amber.withValues(alpha: 0.31)),
+        side: BorderSide(color: Colors.amber.withOpacity(0.31)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -261,7 +263,7 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
           height: 22,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.amber.withValues(alpha: 0.16),
+            color: Colors.amber.withOpacity(0.16),
             borderRadius: BorderRadius.circular(11),
           ),
           child: Text(num,
@@ -399,7 +401,7 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFE2C55).withValues(alpha: 0.1),
+                  color: const Color(0xFFFE2C55).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(Icons.upload_file,
@@ -424,9 +426,9 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
     final isSuccess = _status!.startsWith('导入完成');
     return Card(
       color: isError
-          ? Colors.red.withValues(alpha: 0.06)
+          ? Colors.red.withOpacity(0.06)
           : isSuccess
-              ? Colors.green.withValues(alpha: 0.06)
+              ? Colors.green.withOpacity(0.06)
               : null,
       child: Padding(
         padding: const EdgeInsets.all(16),

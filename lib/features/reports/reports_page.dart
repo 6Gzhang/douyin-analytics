@@ -70,7 +70,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
             border: Border.all(color: const Color(0xFFF1F5F9)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: Colors.black.withOpacity(0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -83,7 +83,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.1),
+                  color: item.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(item.icon, color: item.color, size: 22),

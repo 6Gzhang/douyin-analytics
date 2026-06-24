@@ -67,7 +67,9 @@ class OAuthManager {
         }
         return newAccessToken;
       }
-    } catch (_) {}
+    } catch (e) {
+      print('刷新token失败: $e');
+    }
     return null;
   }
 
@@ -118,7 +120,9 @@ class OAuthManager {
         );
         return true;
       }
-    } catch (_) {}
+    } catch (e) {
+      print('交换授权码失败: $e');
+    }
     return false;
   }
 }

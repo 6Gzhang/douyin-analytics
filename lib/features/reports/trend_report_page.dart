@@ -178,7 +178,7 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
                     drawVerticalLine: false,
                     horizontalInterval: (globalMax / 4).clamp(1, double.infinity),
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.12),
+                      color: Colors.grey.withOpacity(0.12),
                       strokeWidth: 0.5,
                     ),
                   ),
@@ -242,7 +242,7 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
                       ),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: AppTheme.douyinRed.withValues(alpha: 0.06),
+                        color: AppTheme.douyinRed.withOpacity(0.06),
                       ),
                     ),
                     LineChartBarData(
@@ -438,7 +438,7 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(value,
@@ -480,8 +480,8 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: rank == 1
-                        ? AppTheme.accentAmber.withValues(alpha: 0.2)
-                        : Colors.grey.withValues(alpha: 0.1),
+                        ? AppTheme.accentAmber.withOpacity(0.2)
+                        : Colors.grey.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text('$rank',

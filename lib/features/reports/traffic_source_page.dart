@@ -169,7 +169,7 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withValues(alpha: 0.06),
+                  color: AppTheme.accentPurple.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiAnalysis!, style: const TextStyle(fontSize: 12, height: 1.6)),
@@ -251,7 +251,7 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
             child: LinearProgressIndicator(
               value: (pct / 100).clamp(0.0, 1.0),
               minHeight: 3,
-              backgroundColor: color.withValues(alpha: 0.15),
+              backgroundColor: color.withOpacity(0.15),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -387,7 +387,7 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
                       Container(
                         width: 16, height: 16,
                         decoration: BoxDecoration(
-                          color: idx < 3 ? color.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+                          color: idx < 3 ? color.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         alignment: Alignment.center,

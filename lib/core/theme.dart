@@ -9,6 +9,7 @@ class AppTheme {
   static const Color accentGreen = Color(0xFF10B981);
   static const Color accentAmber = Color(0xFFF59E0B);
   static const Color accentPurple = Color(0xFF8B5CF6);
+  static const Color accentPink = Color(0xFFEC4899);
 
   static const Color primaryColor = douyinRed;
   static const Color secondaryColor = douyinCyan;
@@ -47,9 +48,9 @@ class AppTheme {
         ),
         surfaceTintColor: Colors.transparent,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.04),
+        shadowColor: Colors.black.withOpacity(0.04),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         color: Colors.white,
         surfaceTintColor: Colors.transparent,
@@ -57,7 +58,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFFE2C55).withValues(alpha: 0.08),
+        indicatorColor: const Color(0xFFFE2C55).withOpacity(0.08),
         elevation: 0,
         height: 64,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -98,7 +99,7 @@ class AppTheme {
         backgroundColor: const Color(0xFFF1F5F9),
         labelStyle: const TextStyle(fontSize: 12, color: textSecondary),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        selectedColor: const Color(0xFFFE2C55).withValues(alpha: 0.1),
+        selectedColor: const Color(0xFFFE2C55).withOpacity(0.1),
         showCheckmark: false,
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -142,7 +143,6 @@ class AppTheme {
         unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
         indicatorColor: const Color(0xFFFE2C55),
         indicatorSize: TabBarIndicatorSize.label,
-        indicatorWeight: 2.5,
         labelPadding: const EdgeInsets.symmetric(horizontal: 16),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -211,9 +211,9 @@ class AppTheme {
         ),
         surfaceTintColor: Colors.transparent,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
-        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shadowColor: Colors.black.withOpacity(0.3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         color: darkSurface,
         surfaceTintColor: Colors.transparent,
@@ -221,7 +221,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: darkCard,
-        indicatorColor: const Color(0xFFFE2C55).withValues(alpha: 0.2),
+        indicatorColor: const Color(0xFFFE2C55).withOpacity(0.2),
         elevation: 0,
         height: 64,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -256,7 +256,7 @@ class AppTheme {
         backgroundColor: darkCard,
         labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        selectedColor: const Color(0xFFFE2C55).withValues(alpha: 0.2),
+        selectedColor: const Color(0xFFFE2C55).withOpacity(0.2),
         showCheckmark: false,
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -281,7 +281,6 @@ class AppTheme {
         unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
         indicatorColor: const Color(0xFFFE2C55),
         indicatorSize: TabBarIndicatorSize.label,
-        indicatorWeight: 2.5,
         labelPadding: const EdgeInsets.symmetric(horizontal: 16),
       ),
       bottomSheetTheme: BottomSheetThemeData(

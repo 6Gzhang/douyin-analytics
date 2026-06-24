@@ -52,7 +52,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
   }
 
   String _getGrade(double score) {
-    return VideoQualityAnalyzer.getGrade(score);
+    return VideoQualityAnalyzer.getQualityGrade(score).name.toUpperCase();
   }
 
   Color _getGradeColor(String grade) {

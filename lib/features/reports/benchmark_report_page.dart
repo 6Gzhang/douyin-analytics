@@ -148,7 +148,7 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -193,7 +193,7 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
                     drawVerticalLine: false,
                     horizontalInterval: (maxCount / 4).ceilToDouble().clamp(1, double.infinity),
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.15),
+                      color: Colors.grey.withOpacity(0.15),
                       strokeWidth: 0.5,
                     ),
                   ),
@@ -295,7 +295,7 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: cmpColor.withValues(alpha: 0.08),
+                color: cmpColor.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

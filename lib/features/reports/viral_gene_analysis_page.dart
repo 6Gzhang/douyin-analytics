@@ -1,7 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database/database.dart';
 import '../../utils/video_quality_analyzer.dart';
@@ -16,11 +15,11 @@ class ViralGeneAnalysisPage extends ConsumerStatefulWidget {
 class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> with SingleTickerProviderStateMixin {
   final _db = AppDatabase();
   bool _loading = true;
+  String? _error;
   late TabController _tabController;
 
   List<Map<String, dynamic>> _allVideos = [];
   List<Map<String, dynamic>> _topVideos = [];
-  List<Map<String, dynamic>> _bottomVideos = [];
 
   // 时长分析
   Map<String, dynamic> _durationAnalysis = {};
@@ -32,8 +31,6 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
   Map<String, dynamic> _interactionAnalysis = {};
   // 质量评分特征
   Map<String, dynamic> _qualityAnalysis = {};
-  // 流量来源特征
-  Map<String, dynamic> _trafficAnalysis = {};
   // 标题关键词
   List<_KeywordCount> _topKeywords = [];
 
@@ -68,7 +65,10 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
   }
 
   Future<void> _loadData() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final videos = await _db.getAllVideosWithMetrics();
       _allVideos = videos;
@@ -89,7 +89,6 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
 
       final topCount = (withScores.length * 0.3).ceil();
       _topVideos = withScores.take(topCount).toList();
-      _bottomVideos = withScores.skip(withScores.length - topCount).take(topCount).toList();
 
       // 1. 时长分析
       _analyzeDuration(withScores);
@@ -116,6 +115,7 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
     } catch (e) {
       setState(() {
         _loading = false;
+        _error = e.toString();
       });
     }
   }
@@ -138,8 +138,10 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
 
     List<Map<String, dynamic>> rangeData = [];
     for (final range in ranges) {
-      final topInRange = topDurations.where((d) => d >= range['min']! && d < range['max']!).length;
-      final allInRange = allDurations.where((d) => d >= range['min']! && d < range['max']!).length;
+      final minVal = (range['min'] as num).toDouble();
+      final maxVal = (range['max'] as num).toDouble();
+      final topInRange = topDurations.where((d) => d >= minVal && d < maxVal).length;
+      final allInRange = allDurations.where((d) => d >= minVal && d < maxVal).length;
       rangeData.add({
         'label': range['label'],
         'topCount': topInRange,
@@ -254,7 +256,9 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
 
     List<Map<String, dynamic>> rangeData = [];
     for (final range in ranges) {
-      final topInRange = topFR.where((d) => d >= range['min']! && d < range['max']!).length;
+      final minVal = (range['min'] as num).toDouble();
+      final maxVal = (range['max'] as num).toDouble();
+      final topInRange = topFR.where((d) => d >= minVal && d < maxVal).length;
       rangeData.add({
         'label': range['label'],
         'topCount': topInRange,
@@ -303,8 +307,8 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
   }
 
   void _analyzeQuality(List<Map<String, dynamic>> videos) {
-    final topScores = _topVideos.map((v) => v['quality_score'] as double).toList();
-    final allScores = videos.map((v) => v['quality_score'] as double).toList();
+    final topScores = _topVideos.map((v) => (v['quality_score'] as num).toDouble()).toList();
+    final allScores = videos.map((v) => (v['quality_score'] as num).toDouble()).toList();
 
     double avgTop = topScores.isNotEmpty ? topScores.reduce((a, b) => a + b) / topScores.length : 0;
     double avgAll = allScores.isNotEmpty ? allScores.reduce((a, b) => a + b) / allScores.length : 0;
@@ -312,11 +316,15 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
     // 等级分布
     final grades = ['S', 'A', 'B', 'C', 'D'];
     final gradeCounts = <String, int>{};
-    for (final g in grades) gradeCounts[g] = 0;
+    for (final g in grades) {
+      gradeCounts[g] = 0;
+    }
 
     for (final v in _topVideos) {
-      final grade = VideoQualityAnalyzer.getGrade(v['quality_score']);
-      gradeCounts[grade] = (gradeCounts[grade] ?? 0) + 1;
+      final qualityScore = (v['quality_score'] as num).toDouble();
+      final grade = VideoQualityAnalyzer.getQualityGrade(qualityScore);
+      final gradeKey = grade.name.toUpperCase();
+      gradeCounts[gradeKey] = (gradeCounts[gradeKey] ?? 0) + 1;
     }
 
     _qualityAnalysis = {
@@ -352,14 +360,6 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
       avgFollow /= count;
       avgCity /= count;
     }
-
-    _trafficAnalysis = {
-      'avgRecommend': avgRecommend,
-      'avgSearch': avgSearch,
-      'avgFollow': avgFollow,
-      'avgCity': avgCity,
-      'count': count,
-    };
   }
 
   void _analyzeKeywords(List<Map<String, dynamic>> videos) {
@@ -423,19 +423,49 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _allVideos.isEmpty
-              ? _buildEmpty()
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildDurationTab(),
-                    _buildPublishTimeTab(),
-                    _buildFinishRateTab(),
-                    _buildInteractionTab(),
-                    _buildQualityTab(),
-                    _buildKeywordsTab(),
-                  ],
-                ),
+          : _error != null
+              ? _buildError()
+              : _allVideos.isEmpty
+                  ? _buildEmpty()
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildDurationTab(),
+                        _buildPublishTimeTab(),
+                        _buildFinishRateTab(),
+                        _buildInteractionTab(),
+                        _buildQualityTab(),
+                        _buildKeywordsTab(),
+                      ],
+                    ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text('加载失败', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? '未知错误',
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('重试'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

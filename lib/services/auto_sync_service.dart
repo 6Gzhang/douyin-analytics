@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 // 自动同步服务状态
@@ -175,8 +173,8 @@ const encryptionKey = CryptoJS.lib.WordArray.random(16).toString();
 // 加密凭证
 const encrypted = CryptoJS.AES.encrypt(
   JSON.stringify({
-    phone: '${phone}',
-    password: '${password}'
+    phone: '$phone',
+    password: '$password'
   }),
   encryptionKey
 ).toString();
@@ -187,12 +185,12 @@ fs.writeFileSync(path.join(CONFIG_DIR, 'credentials.enc'), encrypted);
 // 保存设置
 const settings = {
   encryptionKey: encryptionKey,
-  syncTime: '${syncTime}',
+  syncTime: '$syncTime',
   downloadDir: path.join(DATA_DIR, 'downloads'),
   enableSync: ${gitRepo != null ? 'true' : 'false'},
   syncService: '${gitRepo != null ? 'git' : 'null'}',
-  gitRepo: ${gitRepo != null ? "'${gitRepo}'" : 'null'},
-  deviceId: 'device_${Date.now()}',
+  gitRepo: ${gitRepo != null ? "'$gitRepo'" : 'null'},
+  deviceId: 'device_\${Date.now()}',
   createdAt: new Date().toISOString()
 };
 

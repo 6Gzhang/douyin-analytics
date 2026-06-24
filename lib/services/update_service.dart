@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
 class AppVersion {
@@ -15,7 +16,7 @@ class AppVersion {
     this.publishedAt,
   });
 
-  bool get isNewerThan(String currentVersion) {
+  bool isNewerThan(String currentVersion) {
     final current = _parseVersion(currentVersion);
     final latest = _parseVersion(version);
     if (current == null || latest == null) return false;
@@ -30,7 +31,9 @@ class AppVersion {
     try {
       final cleaned = v.replaceAll('v', '').split('+').first;
       final parts = cleaned.split('.').map(int.parse).toList();
-      while (parts.length < 3) parts.add(0);
+      while (parts.length < 3) {
+        parts.add(0);
+      }
       return parts.sublist(0, 3);
     } catch (_) {
       return null;
@@ -40,12 +43,28 @@ class AppVersion {
 
 class UpdateService {
   static const String repoOwner = '6Gzhang';
-  static const String repoName = '-';
+  static const String repoName = 'douyin-analytics';
   static const String apiUrl =
       'https://api.github.com/repos/$repoOwner/$repoName/releases/latest';
 
-  static Future<AppVersion?> checkForUpdate(String currentVersion) async {
+  static Future<String> getCurrentVersion() async {
     try {
+      final manifestContent = await rootBundle.loadString('pubspec.yaml');
+      final lines = manifestContent.split('\n');
+      for (final line in lines) {
+        if (line.startsWith('version:')) {
+          return line.substring(9).trim();
+        }
+      }
+    } catch (e) {
+      print('读取版本号失败: $e');
+    }
+    return '1.1.0';
+  }
+
+  static Future<AppVersion?> checkForUpdate([String? currentVersion]) async {
+    try {
+      final version = currentVersion ?? await getCurrentVersion();
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {'Accept': 'application/vnd.github.v3+json'},
@@ -57,9 +76,9 @@ class UpdateService {
       final tagName = data['tag_name'] as String?;
       if (tagName == null) return null;
 
-      final version = tagName.replaceAll('v', '');
+      final latestVersion = tagName.replaceAll('v', '');
       final appVersion = AppVersion(
-        version: version,
+        version: latestVersion,
         downloadUrl: _findDownloadUrl(data),
         releaseNotes: data['body'] as String?,
         publishedAt: data['published_at'] != null
@@ -67,7 +86,7 @@ class UpdateService {
             : null,
       );
 
-      if (appVersion.isNewerThan(currentVersion)) {
+      if (appVersion.isNewerThan(version)) {
         return appVersion;
       }
       return null;

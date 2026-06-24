@@ -244,7 +244,7 @@ class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: const Color(0xFFFE2C55)
-                                .withValues(alpha: 0.1),
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text('${idx + 1}',
@@ -326,11 +326,11 @@ class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
       String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Card(
-        color: color.withValues(alpha: 0.07),
+        color: color.withOpacity(0.07),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: color.withValues(alpha: 0.15)),
+          side: BorderSide(color: color.withOpacity(0.15)),
         ),
         child: Padding(
           padding:

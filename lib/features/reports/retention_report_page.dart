@@ -195,7 +195,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
         'total_videos': _totalVideos,
         'drop_off_second': _dropOffSecond,
       };
-      final result = await AiService.instance.audienceInterpretation(stats);
+      final result = await AiService.instance.retentionAnalysis(stats);
       if (!mounted) return;
       setState(() {
         _aiInsight = result;
@@ -277,7 +277,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.06),
+                  color: AppTheme.accentBlue.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiInsight!, style: const TextStyle(fontSize: 12, height: 1.6)),
@@ -405,7 +405,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
                       child: LinearProgressIndicator(
                         value: (stage.rate / 100).clamp(0.0, 1.0),
                         minHeight: 14,
-                        backgroundColor: stage.color.withValues(alpha: 0.12),
+                        backgroundColor: stage.color.withOpacity(0.12),
                         valueColor: AlwaysStoppedAnimation(stage.color),
                       ),
                     ),
@@ -466,8 +466,8 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            AppTheme.douyinRed.withValues(alpha: 0.2),
-                            AppTheme.douyinRed.withValues(alpha: 0.02),
+                            AppTheme.douyinRed.withOpacity(0.2),
+                            AppTheme.douyinRed.withOpacity(0.02),
                           ],
                         ),
                       ),
@@ -580,7 +580,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
       margin: const EdgeInsets.all(3),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.06),
+        color: color.withOpacity(0.06),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -683,7 +683,11 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
               child: ScatterChart(
                 ScatterChartData(
                   scatterSpots: _scatter
-                      .map((s) => ScatterSpot(s.plays.toDouble(), s.finishRate, radius: 3))
+                      .map<ScatterSpot>((s) => ScatterSpot(
+                        s.plays.toDouble(),
+                        s.finishRate,
+                        dotPainter: FlDotCirclePainter(radius: 3, color: AppTheme.accentPurple),
+                      ))
                       .toList(),
                   titlesData: FlTitlesData(
                     leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -724,7 +728,7 @@ class _VideoRetention {
   final int playCount;
   final double fiveSecRate;
   final double twoSecExitRate;
-  _VideoRetention({required this.title, required this.duration, required this.finishRate, required this.playCount, required this.fiveSecRate, this.twoSecExitRate = 20});
+  _VideoRetention({required this.title, required this.duration, required this.finishRate, required this.playCount, required this.fiveSecRate, this.twoSecExitRate = 20.0});
 }
 
 class _FunnelStage {

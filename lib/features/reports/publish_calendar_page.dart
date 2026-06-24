@@ -255,7 +255,7 @@ class _PublishCalendarPageState extends ConsumerState<PublishCalendarPage>
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                        color: AppTheme.accentBlue.withOpacity(0.1),
                       ),
                     ),
                   ],
@@ -304,7 +304,7 @@ class _PublishCalendarPageState extends ConsumerState<PublishCalendarPage>
               children: [
                 TableRow(
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.08),
+                    color: Colors.grey.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   children: const [
@@ -354,8 +354,8 @@ class _PublishCalendarPageState extends ConsumerState<PublishCalendarPage>
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             colors: [
-              AppTheme.accentPurple.withValues(alpha: 0.05),
-              AppTheme.accentBlue.withValues(alpha: 0.03),
+              AppTheme.accentPurple.withOpacity(0.05),
+              AppTheme.accentBlue.withOpacity(0.03),
             ],
           ),
         ),

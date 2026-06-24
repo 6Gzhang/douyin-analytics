@@ -208,7 +208,7 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentAmber.withValues(alpha: 0.06),
+                  color: AppTheme.accentAmber.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiAnalysis!, style: const TextStyle(fontSize: 12, height: 1.6)),
@@ -272,7 +272,7 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _getCtrLevelColor().withValues(alpha: 0.08),
+                color: _getCtrLevelColor().withOpacity(0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -421,7 +421,7 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
                     Container(
                       width: 18, height: 18,
                       decoration: BoxDecoration(
-                        color: idx < 3 ? color.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+                        color: idx < 3 ? color.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       alignment: Alignment.center,

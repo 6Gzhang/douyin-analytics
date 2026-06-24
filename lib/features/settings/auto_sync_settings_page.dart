@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/auto_sync_service.dart';
-import '../../core/format_utils.dart';
 
 class AutoSyncSettingsPage extends ConsumerStatefulWidget {
   const AutoSyncSettingsPage({super.key});
@@ -136,7 +135,7 @@ class _AutoSyncSettingsPageState extends ConsumerState<AutoSyncSettingsPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
+                      color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
@@ -171,7 +170,7 @@ class _AutoSyncSettingsPageState extends ConsumerState<AutoSyncSettingsPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -308,7 +307,7 @@ class _AutoSyncSettingsPageState extends ConsumerState<AutoSyncSettingsPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: Colors.blue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -476,7 +475,7 @@ class _AutoSyncSettingsPageState extends ConsumerState<AutoSyncSettingsPage> {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
+              color: Colors.blue.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Center(

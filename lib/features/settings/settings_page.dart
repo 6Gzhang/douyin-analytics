@@ -3,6 +3,7 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants.dart';
@@ -24,15 +25,27 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _clearingCache = false;
   bool _importing = false;
   bool _checkingUpdate = false;
+  bool _debugMode = false;
+  String _debugVersion = '';
+  late TextEditingController _debugVersionController;
   String _apiKey = '';
   String _selectedModel = SpKeys.defaultModel;
   int _aiUsageCount = 0;
   int _aiEstimatedTokens = 0;
+  String _currentVersion = '1.1.0';
 
   @override
   void initState() {
     super.initState();
+    _debugVersionController = TextEditingController();
     _loadAiConfig();
+    _loadVersion();
+  }
+
+  @override
+  void dispose() {
+    _debugVersionController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAiConfig() async {
@@ -42,6 +55,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _selectedModel = sp.getString(SpKeys.siliconflowModel) ?? SpKeys.defaultModel;
       _aiUsageCount = sp.getInt(SpKeys.aiUsageCount) ?? 0;
       _aiEstimatedTokens = sp.getInt(SpKeys.aiEstimatedTokens) ?? 0;
+    });
+  }
+
+  Future<void> _loadVersion() async {
+    final version = await UpdateService.getCurrentVersion();
+    setState(() {
+      _currentVersion = version;
+      _debugVersion = version;
+    });
+  }
+
+  void _toggleDebugMode() {
+    setState(() {
+      _debugMode = !_debugMode;
+      if (!_debugMode) {
+        _debugVersion = _currentVersion;
+        _debugVersionController.text = _currentVersion;
+      } else {
+        // 开启调试模式时,默认设置为比当前版本低的版本号
+        _debugVersion = '1.0.0';
+        _debugVersionController.text = '1.0.0';
+      }
     });
   }
 
@@ -102,7 +137,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withValues(alpha: 0.1),
+            color: AppTheme.accentBlue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.upload_file, color: AppTheme.accentBlue, size: 20),
@@ -314,7 +349,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentPink.withValues(alpha: 0.1),
+            color: AppTheme.accentPink.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.sync, color: AppTheme.accentPink, size: 20),
@@ -335,7 +370,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentAmber.withValues(alpha: 0.1),
+            color: AppTheme.accentAmber.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.cleaning_services, color: AppTheme.accentAmber, size: 20),
@@ -391,7 +426,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.douyinRed.withValues(alpha: 0.1),
+            color: AppTheme.douyinRed.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.delete_forever, color: AppTheme.douyinRed, size: 20),
@@ -475,7 +510,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             height: 22,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.accentBlue.withValues(alpha: 0.1),
+              color: AppTheme.accentBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(num,
@@ -492,7 +527,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildAboutCard() {
-    const currentVersion = '1.1.0';
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -507,15 +541,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
-                    'v$currentVersion',
+                  child: Text(
+                    'v$_currentVersion',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.primary,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                 ),
@@ -523,6 +557,49 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: 12),
             const Divider(height: 1),
+            const SizedBox(height: 12),
+            // 调试模式开关
+            Row(
+              children: [
+                Switch(
+                  value: _debugMode,
+                  onChanged: (value) => _toggleDebugMode(),
+                  activeColor: AppTheme.douyinRed,
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('调试模式',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    Text('模拟旧版本以测试更新推送',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  ],
+                ),
+              ],
+            ),
+            if (_debugMode) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _debugVersionController,
+                decoration: InputDecoration(
+                  labelText: '测试版本号',
+                  hintText: '例如: 1.0.0',
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _debugVersion = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '提示: 输入比当前版本低的版本号，点击“检查更新”即可看到更新提示',
+                style: TextStyle(fontSize: 11, color: Colors.orange[700]),
+              ),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [
@@ -540,9 +617,52 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
                 _checkingUpdate
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : FilledButton.tonal(
-                        onPressed: _checkUpdate,
-                        child: const Text('检查更新'),
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // 测试按钮 - 模拟旧版本
+                          FilledButton(
+                            onPressed: () async {
+                              setState(() => _checkingUpdate = true);
+                              try {
+                                final latest = await UpdateService.checkForUpdate('1.0.0');
+                                if (!mounted) return;
+                                if (latest != null) {
+                                  _showUpdateDialog(latest);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('未检测到更新(GitHub上可能没有更高版本)'),
+                                      backgroundColor: AppTheme.accentGreen,
+                                      duration: Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('测试失败: $e'),
+                                    backgroundColor: AppTheme.douyinRed,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                              } finally {
+                                if (mounted) setState(() => _checkingUpdate = false);
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.douyinRed,
+                            ),
+                            child: const Text('🧪 测试'),
+                          ),
+                          const SizedBox(width: 8),
+                          // 正常检查更新按钮
+                          FilledButton.tonal(
+                            onPressed: _checkUpdate,
+                            child: const Text('检查更新'),
+                          ),
+                        ],
                       ),
               ],
             ),
@@ -560,8 +680,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _checkUpdate() async {
     setState(() => _checkingUpdate = true);
     try {
-      const currentVersion = '1.1.0';
-      final latest = await UpdateService.checkForUpdate(currentVersion);
+      final testVersion = _debugMode && _debugVersion.isNotEmpty ? _debugVersion : null;
+      final latest = await UpdateService.checkForUpdate(testVersion);
       if (!mounted) return;
       if (latest != null) {
         _showUpdateDialog(latest);
@@ -594,7 +714,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.update, color: AppTheme.primary, size: 22),
+            const Icon(Icons.update, color: AppTheme.primaryColor, size: 22),
             const SizedBox(width: 8),
             const Text('发现新版本'),
           ],
@@ -646,7 +766,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Widget _buildDangerCard() {
     return Card(
-      color: AppTheme.douyinRed.withValues(alpha: 0.04),
+      color: AppTheme.douyinRed.withOpacity(0.04),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

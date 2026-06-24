@@ -178,7 +178,7 @@ class _ContentInsightReportPageState
         color: Theme.of(context).brightness == Brightness.dark
             ? const Color(0xFF1E1E1E)
             : Colors.grey[50],
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1))),
+        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
       child: Row(
         children: [
@@ -244,7 +244,7 @@ class _ContentInsightReportPageState
                     ? const Color(0xFF1E1E1E)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
+                border: Border.all(color: Colors.grey.withOpacity(0.08)),
               ),
               child: Row(
                 children: [
@@ -252,8 +252,8 @@ class _ContentInsightReportPageState
                     width: 24, height: 24,
                     decoration: BoxDecoration(
                       color: index < 3
-                          ? accent.withValues(alpha: 0.15)
-                          : Colors.grey.withValues(alpha: 0.1),
+                          ? accent.withOpacity(0.15)
+                          : Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     alignment: Alignment.center,
@@ -364,8 +364,7 @@ class _ContentInsightReportPageState
               ],
             ),
             const SizedBox(height: 8),
-            ...videos.take(5).asMap().entries.map((entry) {
-              final idx = entry.key;
+            ...videos.take(5).toList().asMap().entries.map((entry) {
               final v = entry.value;
               final titleText = v['title'] as String? ?? '无标题';
               String val;
@@ -435,7 +434,7 @@ class _ContentInsightReportPageState
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withValues(alpha: 0.06),
+                  color: AppTheme.accentPurple.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiAnalysis!,

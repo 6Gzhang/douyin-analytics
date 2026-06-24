@@ -19,7 +19,7 @@ class TrendChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: maxY / 4,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.withValues(alpha: 0.15),
+            color: Colors.grey.withOpacity(0.15),
             strokeWidth: 0.5,
           ),
         ),
@@ -73,7 +73,7 @@ class TrendChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: const Color(0xFFFE2C55).withValues(alpha: 0.08),
+              color: const Color(0xFFFE2C55).withOpacity(0.08),
             ),
           ),
         ],

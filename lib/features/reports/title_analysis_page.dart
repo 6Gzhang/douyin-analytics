@@ -84,7 +84,7 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
     final words = <String>{};
     // Split by common delimiters
     final segments = title
-        .replaceAll(RegExp(r'[，。！？、；：""''（）【】《》\s#@¥…—\-\+=\[\]{}|\\/&*]'), '|')
+        .replaceAll(RegExp(r'[，。！？、；：''（）【】《》\s#@¥…—\-+=\[\]{}|\\/&*]'), '|')
         .split('|')
         .where((s) => s.length >= 2)
         .toList();
@@ -180,7 +180,7 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
                             t.plays.toDouble(),
                             dotPainter: FlDotCirclePainter(
                               radius: 5,
-                              color: AppTheme.accentBlue.withValues(alpha: 0.6),
+                              color: AppTheme.accentBlue.withOpacity(0.6),
                               strokeWidth: 0,
                             ),
                           ))
@@ -189,7 +189,7 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
                     show: true,
                     drawVerticalLine: false,
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey.withValues(alpha: 0.08),
+                      color: Colors.grey.withOpacity(0.08),
                       strokeWidth: 0.5,
                     ),
                   ),
@@ -266,7 +266,7 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: rColor.withValues(alpha: 0.06),
+        color: rColor.withOpacity(0.06),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -341,7 +341,7 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
                               child: LinearProgressIndicator(
                                 value: ratio,
                                 minHeight: 8,
-                                backgroundColor: AppTheme.accentBlue.withValues(alpha: 0.08),
+                                backgroundColor: AppTheme.accentBlue.withOpacity(0.08),
                                 valueColor: const AlwaysStoppedAnimation(AppTheme.accentBlue),
                               ),
                             ),

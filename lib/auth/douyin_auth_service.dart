@@ -125,7 +125,9 @@ class DouyinAuthService {
           return true;
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      print('刷新token失败: $e');
+    }
     return false;
   }
 

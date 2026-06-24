@@ -356,7 +356,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                   width: 80,
                   height: 106,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.12),
+                    color: Colors.grey.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.play_circle_outline,
@@ -387,7 +387,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: gradeColor.withValues(alpha: 0.15),
+                              color: gradeColor.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -494,7 +494,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color: color.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(7),
               ),
               child: Icon(icon, size: 16, color: color),
@@ -584,7 +584,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             child: LinearProgressIndicator(
               value: ratio.clamp(0.01, 1.0),
               minHeight: isHead ? 22 : 16,
-              backgroundColor: color.withValues(alpha: 0.08),
+              backgroundColor: color.withOpacity(0.08),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
@@ -680,7 +680,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(value,
@@ -914,7 +914,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
   Widget _buildAdvancedDataNote() {
     return Card(
-      color: AppTheme.accentAmber.withValues(alpha: 0.06),
+      color: AppTheme.accentAmber.withOpacity(0.06),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(

@@ -122,7 +122,9 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
               ageAgg[key] = (ageAgg[key] ?? 0) + value;
             });
             audienceDataCount++;
-          } catch (_) {}
+          } catch (e) {
+            print('解析年龄分布失败: $e');
+          }
         }
 
         final regionDistStr = (v['audience_region_dist'] as String?) ?? '';
@@ -133,7 +135,9 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
               regionAgg[key] = (regionAgg[key] ?? 0) + value;
             });
             audienceDataCount++;
-          } catch (_) {}
+          } catch (e) {
+            print('解析地区分布失败: $e');
+          }
         }
       }
 
@@ -188,18 +192,13 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
     if (_aiInterpreting) return;
     setState(() => _aiInterpreting = true);
     try {
-      final stats = {
-        'male_ratio': _maleRatio,
-        'female_ratio': _femaleRatio,
-        'age_distribution': _ageDistribution,
-        'region_distribution': _regionDistribution.asMap().map((k, v) => MapEntry(v.key, v.value)),
-        'avg_finish_rate': _avgFinishRate,
-        'avg_watch_duration': _avgWatchDuration,
-        'like_rate': _likeRate,
-        'comment_rate': _commentRate,
-        'share_rate': _shareRate,
-      };
-      final result = await AiService.instance.audienceInterpretation(stats);
+      final result = await AiService.instance.audienceInterpretation(
+        maleRatio: _maleRatio,
+        ageDistribution: _ageDistribution,
+        topRegions: _regionDistribution,
+        avgWatchDuration: _avgWatchDuration,
+        avgFinishRate: _avgFinishRate,
+      );
       if (!mounted) return;
       setState(() {
         _aiInterpretation = result;
@@ -357,7 +356,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
   Widget _metricBox(String label, String value, Color color) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
           Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
@@ -412,7 +411,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
                           child: LinearProgressIndicator(
                             value: ratio,
                             minHeight: 10,
-                            backgroundColor: colors[idx].withValues(alpha: 0.15),
+                            backgroundColor: colors[idx].withOpacity(0.15),
                             valueColor: AlwaysStoppedAnimation(colors[idx]),
                           ),
                         ),
@@ -492,7 +491,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withValues(alpha: 0.06),
+                  color: AppTheme.accentPurple.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiInterpretation!, style: const TextStyle(fontSize: 12, height: 1.6)),
@@ -624,7 +623,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
                             child: LinearProgressIndicator(
                               value: (e.value / maxVal).clamp(0.0, 1.0),
                               minHeight: 8,
-                              backgroundColor: colors[idx % colors.length].withValues(alpha: 0.15),
+                              backgroundColor: colors[idx % colors.length].withOpacity(0.15),
                               valueColor: AlwaysStoppedAnimation(colors[idx % colors.length]),
                             ),
                           ),
@@ -701,7 +700,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
   Widget _featureItem(String title, String main, String sub, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: color.withOpacity(0.06), borderRadius: BorderRadius.circular(8)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -741,7 +740,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
             if (_regionDistribution.isEmpty)
               Text('暂无地域数据', style: TextStyle(fontSize: 11, color: Colors.grey[500]))
             else
-              ..._regionDistribution.take(10).asMap().entries.map((entry) {
+              ..._regionDistribution.take(10).toList().asMap().entries.map((entry) {
                 final idx = entry.key;
                 final region = entry.value;
                 return Padding(
@@ -752,7 +751,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
                         width: 16,
                         height: 16,
                         decoration: BoxDecoration(
-                          color: idx < 3 ? AppTheme.accentAmber.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+                          color: idx < 3 ? AppTheme.accentAmber.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         alignment: Alignment.center,
@@ -766,7 +765,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
                           child: LinearProgressIndicator(
                             value: (region.value / maxVal).clamp(0.0, 1.0),
                             minHeight: 7,
-                            backgroundColor: AppTheme.accentAmber.withValues(alpha: 0.12),
+                            backgroundColor: AppTheme.accentAmber.withOpacity(0.12),
                             valueColor: const AlwaysStoppedAnimation(AppTheme.accentAmber),
                           ),
                         ),
@@ -826,7 +825,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
                       child: LinearProgressIndicator(
                         value: (r.value / 20).clamp(0.0, 1.0),
                         minHeight: 8,
-                        backgroundColor: r.color.withValues(alpha: 0.1),
+                        backgroundColor: r.color.withOpacity(0.1),
                         valueColor: AlwaysStoppedAnimation(r.color),
                       ),
                     ),

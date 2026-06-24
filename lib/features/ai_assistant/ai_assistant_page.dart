@@ -118,12 +118,12 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.accentBlue.withValues(alpha: 0.08),
-            AppTheme.accentPurple.withValues(alpha: 0.05),
+            AppTheme.accentBlue.withOpacity(0.08),
+            AppTheme.accentPurple.withOpacity(0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.accentBlue.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -201,7 +201,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
         return Container(
           width: 8, height: 8,
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withValues(alpha: value),
+            color: AppTheme.accentBlue.withOpacity(value),
             shape: BoxShape.circle,
           ),
         );
@@ -221,7 +221,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                color: AppTheme.accentBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.auto_awesome, size: 16, color: AppTheme.accentBlue),
@@ -290,7 +290,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
       ),
       child: Row(
         children: [

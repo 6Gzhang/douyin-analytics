@@ -35,6 +35,9 @@ final goRouter = GoRouter(
           GoRoute(path: '/reports', builder: (_, __) => const ReportsPage()),
         ]),
         StatefulShellBranch(routes: [
+          GoRoute(path: '/ai-assistant', builder: (_, __) => const AiAssistantPage()),
+        ]),
+        StatefulShellBranch(routes: [
           GoRoute(path: '/settings', builder: (_, __) => const SettingsPage()),
         ]),
       ],
@@ -51,7 +54,6 @@ final goRouter = GoRouter(
     GoRoute(path: '/report/retention', builder: (_, __) => const RetentionReportPage()),
     GoRoute(path: '/report/traffic', builder: (_, __) => const TrafficSourcePage()),
     GoRoute(path: '/report/cover', builder: (_, __) => const CoverAnalysisPage()),
-    GoRoute(path: '/ai-assistant', builder: (_, __) => const AiAssistantPage()),
     GoRoute(path: '/settings/auto-sync', builder: (_, __) => const AutoSyncSettingsPage()),
   ],
 );
@@ -84,6 +86,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
               icon: Icon(Icons.analytics_outlined),
               selectedIcon: Icon(Icons.analytics),
               label: '分析'),
+          NavigationDestination(
+              icon: Icon(Icons.auto_awesome_outlined),
+              selectedIcon: Icon(Icons.auto_awesome),
+              label: 'AI'),
           NavigationDestination(
               icon: Icon(Icons.settings_outlined),
               selectedIcon: Icon(Icons.settings),

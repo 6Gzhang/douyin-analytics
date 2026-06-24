@@ -595,4 +595,45 @@ class AiService {
       sb.toString(),
     );
   }
+
+  Future<String> retentionAnalysis(Map<String, dynamic> stats) async {
+    final avgFinishRate = (stats['avg_finish_rate'] as double?) ?? 0.0;
+    final avgFiveSecFinishRate = (stats['avg_five_second_finish_rate'] as double?) ?? 0.0;
+    final avgTwoSecExitRate = (stats['avg_two_second_exit_rate'] as double?) ?? 0.0;
+    final avgWatchDuration = (stats['avg_watch_duration'] as double?) ?? 0.0;
+    final totalVideos = (stats['total_videos'] as int?) ?? 0;
+    final dropOffSecond = (stats['drop_off_second'] as double?) ?? 0.0;
+
+    final sb = StringBuffer();
+    sb.writeln('抖音视频留存与完播深度分析：');
+    sb.writeln('');
+    sb.writeln('【基础数据】');
+    sb.writeln('分析视频数：$totalVideos 条');
+    sb.writeln('平均完播率：${avgFinishRate.toStringAsFixed(1)}%');
+    sb.writeln('平均5秒完播率：${avgFiveSecFinishRate.toStringAsFixed(1)}%');
+    sb.writeln('平均2秒退出率：${avgTwoSecExitRate.toStringAsFixed(1)}%');
+    sb.writeln('平均观看时长：${avgWatchDuration.toStringAsFixed(1)}秒');
+    if (dropOffSecond > 0) {
+      sb.writeln('流失高峰点：第${dropOffSecond.toStringAsFixed(1)}秒');
+    }
+    sb.writeln('');
+    sb.writeln('请输出留存分析与优化建议：');
+    sb.writeln('');
+    sb.writeln('【留存诊断】');
+    sb.writeln('当前完播率和留存数据处于什么水平？是否健康？');
+    sb.writeln('');
+    sb.writeln('【流失原因分析】');
+    sb.writeln('分析观众流失的可能原因，特别是开头和高峰流失点');
+    sb.writeln('');
+    sb.writeln('【优化建议】');
+    sb.writeln('1. 开头3秒如何优化');
+    sb.writeln('2. 如何提升5秒完播率');
+    sb.writeln('3. 如何提升整体完播率');
+    sb.writeln('4. 视频节奏和结构优化建议');
+
+    return chat(
+      '你是抖音内容优化专家，精通视频完播率、留存率优化和观众行为分析。能够根据留存数据给出精准的内容优化建议。',
+      sb.toString(),
+    );
+  }
 }

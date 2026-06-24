@@ -1,10 +1,8 @@
 import 'dart:math';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database/database.dart';
 import '../../services/ai_service.dart';
@@ -35,11 +33,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
 
   // 平均值
   double _avgPlays = 0.0;
-  double _avgLikes = 0.0;
   double _avgFinishRate = 0.0;
-  double _avgWatchDuration = 0.0;
   double _avgFiveSecFinish = 0.0;
-  double _avgTwoSecExit = 0.0;
   double _avgCoverCtr = 0.0;
 
   // 衍生指标
@@ -48,7 +43,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   double _shareRate = 0.0;
   double _collectRate = 0.0;
   double _interactionRate = 0.0;
-  double _followerConversionRate = 0.0;
 
   // 质量评分
   double _avgQualityScore = 0.0;
@@ -67,11 +61,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   bool _hasTrafficData = false;
 
   // 视频列表
-  List<Map<String, dynamic>> _allVideos = [];
   List<Map<String, dynamic>> _topVideos = [];
-  List<Map<String, dynamic>> _recentVideos = [];
   List<Map<String, dynamic>> _lowQualityVideos = [];
-  List<Map<String, dynamic>> _highQualityVideos = [];
   bool _hasData = false;
 
   // AI诊断
@@ -92,7 +83,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Future<void> _checkUpdateOnStartup() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-    const currentVersion = '1.1.0';
+    final currentVersion = await UpdateService.getCurrentVersion();
     final latest = await UpdateService.checkForUpdate(currentVersion);
     if (latest != null && mounted) {
       _showUpdateDialog(latest);
@@ -105,7 +96,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       builder: (ctx) => AlertDialog(
         title: Row(
           children: const [
-            Icon(Icons.update, color: AppTheme.primary, size: 22),
+            Icon(Icons.update, color: AppTheme.primaryColor, size: 22),
             SizedBox(width: 8),
             Text('发现新版本'),
           ],
@@ -173,7 +164,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         return;
       }
 
-      _allVideos = videos;
       _totalVideos = videos.length;
 
       int totalPlays = 0, totalLikes = 0, totalComments = 0;
@@ -251,11 +241,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       _totalNewFollowers = totalNewFollowers;
 
       _avgPlays = totalPlays / _totalVideos;
-      _avgLikes = totalLikes / _totalVideos;
       _avgFinishRate = finishCount > 0 ? totalFinish / finishCount : 0;
-      _avgWatchDuration = watchCount > 0 ? totalWatch / watchCount : 0;
       _avgFiveSecFinish = count5s > 0 ? total5s / count5s : 0;
-      _avgTwoSecExit = count2s > 0 ? total2s / count2s : 0;
       _avgCoverCtr = coverCount > 0 ? totalCover / coverCount : 0;
 
       _likeRate = totalPlays > 0 ? totalLikes / totalPlays : 0;
@@ -265,7 +252,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       _interactionRate = totalPlays > 0
           ? (totalLikes + totalComments + totalShares + totalCollects) / totalPlays
           : 0;
-      _followerConversionRate = totalPlays > 0 ? totalNewFollowers / totalPlays : 0;
 
       _avgQualityScore = qualityCount > 0 ? totalQualityScore / qualityCount : 0;
       _avgQualityGrade = VideoQualityAnalyzer.getQualityGrade(_avgQualityScore);
@@ -297,8 +283,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         });
 
       _topVideos = sortedByPlays.take(5).toList();
-      _recentVideos = videos.take(5).toList();
-      _highQualityVideos = sortedByQuality.take(5).toList();
       _lowQualityVideos = sortedByQuality.reversed.take(5).toList().reversed.toList();
 
       // 发布时间分析
@@ -403,7 +387,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -411,7 +395,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.primary,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                 ),
@@ -472,14 +456,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            gradeColor.withValues(alpha: 0.15),
-            gradeColor.withValues(alpha: 0.05),
+            gradeColor.withOpacity(0.15),
+            gradeColor.withOpacity(0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: gradeColor.withValues(alpha: 0.3)),
+        border: Border.all(color: gradeColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -492,7 +476,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 height: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: gradeColor.withValues(alpha: 0.2),
+                  color: gradeColor.withOpacity(0.2),
                   border: Border.all(color: gradeColor, width: 3),
                 ),
                 child: Column(
@@ -545,17 +529,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        _buildMiniStat('总播放', _formatK(_totalPlays)),
-                        _buildMiniStat('总点赞', _formatK(_totalLikes)),
-                        _buildMiniStat('总评论', _formatK(_totalComments)),
+                        _buildMiniStat('总播放', _formatK(_totalPlays.toDouble())),
+                        _buildMiniStat('总点赞', _formatK(_totalLikes.toDouble())),
+                        _buildMiniStat('总评论', _formatK(_totalComments.toDouble())),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        _buildMiniStat('总分享', _formatK(_totalShares)),
-                        _buildMiniStat('总收藏', _formatK(_totalCollects)),
-                        _buildMiniStat('涨粉', _formatK(_totalNewFollowers)),
+                        _buildMiniStat('总分享', _formatK(_totalShares.toDouble())),
+                        _buildMiniStat('总收藏', _formatK(_totalCollects.toDouble())),
+                        _buildMiniStat('涨粉', _formatK(_totalNewFollowers.toDouble())),
                       ],
                     ),
                   ],
@@ -635,7 +619,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.08),
+            color: Colors.grey.withOpacity(0.08),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -720,7 +704,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 child: Container(
                   height: 18,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.8),
+                    color: color.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -808,7 +792,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 child: Container(
                   height: 18,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.8),
+                    color: color.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -953,7 +937,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   Container(
                     height: 20 + ratio * 25,
                     decoration: BoxDecoration(
-                      color: isTop ? Colors.redAccent : Colors.teal.withValues(alpha: 0.7),
+                      color: isTop ? Colors.redAccent : Colors.teal.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -996,7 +980,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                   Container(
                     height: 15 + ratio * 15,
                     decoration: BoxDecoration(
-                      color: isTop ? Colors.amber : Colors.blue.withValues(alpha: 0.7),
+                      color: isTop ? Colors.amber : Colors.blue.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1019,7 +1003,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.1),
+        color: Colors.amber.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -1126,7 +1110,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(
-                color: gradeColor.withValues(alpha: 0.15),
+                color: gradeColor.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -1162,7 +1146,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                 child: Text('暂无数据', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
               )
             else
-              ..._lowQualityVideos.map((v) => _buildLowQualityItem(v)).toList(),
+              ..._lowQualityVideos.map((v) => _buildLowQualityItem(v)),
           ],
         ),
       ),

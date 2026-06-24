@@ -155,7 +155,9 @@ class CsvParser {
     try {
       final dt = DateTime.tryParse(val);
       if (dt != null) return dt.millisecondsSinceEpoch;
-    } catch (_) {}
+    } catch (e) {
+      print('解析日期失败: $val, 错误: $e');
+    }
     return 0;
   }
 }
