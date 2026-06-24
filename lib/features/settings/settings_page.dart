@@ -4,11 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../data/database/database.dart';
 import '../../data_sources/csv_parser.dart';
 import '../../services/ai_service.dart';
+import '../../services/update_service.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -21,6 +23,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _db = AppDatabase();
   bool _clearingCache = false;
   bool _importing = false;
+  bool _checkingUpdate = false;
   String _apiKey = '';
   String _selectedModel = SpKeys.defaultModel;
   int _aiUsageCount = 0;
@@ -60,6 +63,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _sectionHeader('AI 助手配置'),
           const SizedBox(height: 8),
           _buildAiConfigSection(),
+          const SizedBox(height: 16),
+          _buildAutoSyncTile(),
           const SizedBox(height: 24),
           _sectionHeader('功能说明'),
           const SizedBox(height: 8),
@@ -301,6 +306,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() => _selectedModel = model);
   }
 
+  // ---- 自动同步 ----
+  Widget _buildAutoSyncTile() {
+    return Card(
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.accentPink.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.sync, color: AppTheme.accentPink, size: 20),
+        ),
+        title: const Text('自动数据同步', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        subtitle: Text('每天自动登录抖音后台导出数据',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () => context.go('/settings/auto-sync'),
+      ),
+    );
+  }
+
   Widget _buildClearCacheTile() {
     return Card(
       child: ListTile(
@@ -465,24 +492,154 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildAboutCard() {
+    const currentVersion = '1.1.0';
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('douyin_analytics',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            Text('v1.3.0',
-                style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+            Row(
+              children: [
+                const Text('douyin_analytics',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'v$currentVersion',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('检查更新',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 2),
+                      Text('从 GitHub 获取最新版本',
+                          style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                    ],
+                  ),
+                ),
+                _checkingUpdate
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : FilledButton.tonal(
+                        onPressed: _checkUpdate,
+                        child: const Text('检查更新'),
+                      ),
+              ],
+            ),
             const SizedBox(height: 12),
             Text(
-              '本次更新：千问云端AI助手、智能API自适应、新字段补全(2秒跳出率/封面点击率/主页访问量)、AI视频诊断、发布日历分析、完播率深度分析、模拟观众反馈',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.5),
+              '数据驱动创作，每一条视频都值得被认真分析。',
+              style: TextStyle(fontSize: 12, color: Colors.grey[500], height: 1.5),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _checkUpdate() async {
+    setState(() => _checkingUpdate = true);
+    try {
+      const currentVersion = '1.1.0';
+      final latest = await UpdateService.checkForUpdate(currentVersion);
+      if (!mounted) return;
+      if (latest != null) {
+        _showUpdateDialog(latest);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('当前已是最新版本'),
+            backgroundColor: AppTheme.accentGreen,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('检查更新失败: $e'),
+          backgroundColor: AppTheme.douyinRed,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+  }
+
+  void _showUpdateDialog(AppVersion version) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.update, color: AppTheme.primary, size: 22),
+            const SizedBox(width: 8),
+            const Text('发现新版本'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('最新版本: v${version.version}',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            if (version.releaseNotes != null && version.releaseNotes!.isNotEmpty) ...[
+              const Text('更新内容:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  version.releaseNotes!,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.5),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('稍后再说'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final url = version.downloadUrl ??
+                  'https://github.com/6Gzhang/-/releases/latest';
+              if (await canLaunchUrl(Uri.parse(url))) {
+                await launchUrl(Uri.parse(url));
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('前往下载'),
+          ),
+        ],
       ),
     );
   }

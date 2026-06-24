@@ -31,7 +31,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
 
   Future<void> _loadApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _apiKey = prefs.getString('dashscope_api_key'));
+    setState(() => _apiKey = prefs.getString('siliconflow_api_key'));
   }
 
   void _addIntro() {

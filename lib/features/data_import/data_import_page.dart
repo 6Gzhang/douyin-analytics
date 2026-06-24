@@ -96,14 +96,26 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
 
       for (final metric in parsed) {
         try {
-          final videoId = '${DateTime.now().microsecondsSinceEpoch
-              .toString()
-              .substring(0, 13)}_${imported + 1}';
+          final videoId = metric.videoId.isNotEmpty
+              ? metric.videoId
+              : '${DateTime.now().microsecondsSinceEpoch
+                  .toString()
+                  .substring(0, 13)}_${imported + 1}';
+          
+          int createTime = now;
+          if (metric.publishDate.isNotEmpty) {
+            try {
+              final dt = DateTime.tryParse(metric.publishDate);
+              if (dt != null) createTime = dt.millisecondsSinceEpoch ~/ 1000;
+            } catch (_) {}
+          }
+          
           await _db.insertVideo({
             'id': videoId,
             'title': metric.videoTitle,
             'cover_url': '',
-            'create_time': now,
+            'create_time': createTime,
+            'duration': metric.totalDuration,
             'is_top': 0,
             'source': 'csv',
             'source_id': _pickedPath!.split('/').last,
@@ -115,8 +127,32 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
             'comment_count': metric.commentCount,
             'share_count': metric.shareCount,
             'collect_count': metric.collectCount,
-            'finish_rate': metric.finishRate ?? 0,
-            'avg_watch_duration': metric.avgWatchDuration ?? 0,
+            'finish_rate': metric.finishRate,
+            'avg_watch_duration': metric.avgWatchDuration,
+            'two_second_exit_rate': metric.twoSecondExitRate ?? 0,
+            'cover_ctr': metric.coverCtr ?? 0,
+            'profile_visits': metric.profileVisits,
+            'full_play_count': metric.fullPlayCount,
+            'five_second_finish_rate': metric.fiveSecondFinishRate ?? 0,
+            'new_followers': metric.newFollowers,
+            'total_duration': metric.totalDuration,
+            'traffic_recommend': metric.trafficRecommend,
+            'traffic_search': metric.trafficSearch,
+            'traffic_follow': metric.trafficFollow,
+            'traffic_city': metric.trafficCity,
+            'traffic_profile': metric.trafficProfile,
+            'traffic_hotspot': metric.trafficHotspot,
+            'traffic_doujia': metric.trafficDoujia,
+            'audience_male_ratio': metric.audienceMaleRatio,
+            'audience_age_dist': metric.audienceAgeDist,
+            'audience_region_dist': metric.audienceRegionDist,
+            'like_rate': metric.likeRate,
+            'comment_rate': metric.commentRate,
+            'share_rate': metric.shareRate,
+            'collect_rate': metric.collectRate,
+            'interaction_rate': metric.interactionRate,
+            'fetched_at': now,
+            'source': 'csv',
             'updated_at': now,
           });
           imported++;

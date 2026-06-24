@@ -162,20 +162,44 @@ class FeishuService {
     return records.map((fields) {
       return FeishuDouyinMetric(
         videoTitle:
-            _getString(fields, ['视频标题', '标题', 'video_title', 'title']),
-        playCount: _getInt(fields, ['播放量', '播放数', 'play_count', 'plays']),
-        likeCount: _getInt(fields, ['点赞数', '点赞', 'like_count', 'likes']),
+            _getString(fields, ['视频标题', '标题', 'video_title', 'title', '作品标题', '作品名称']),
+        videoId: _getString(fields, ['视频ID', 'video_id', 'id', 'item_id']),
+        playCount: _getInt(fields, ['播放量', '播放数', 'play_count', 'plays', '播放次数']),
+        likeCount: _getInt(fields, ['点赞数', '点赞', 'like_count', 'likes', '点赞量']),
         commentCount:
-            _getInt(fields, ['评论数', '评论', 'comment_count', 'comments']),
+            _getInt(fields, ['评论数', '评论', 'comment_count', 'comments', '评论量']),
         shareCount:
-            _getInt(fields, ['分享数', '分享', 'share_count', 'shares']),
+            _getInt(fields, ['分享数', '分享', 'share_count', 'shares', '转发数', '转发量']),
         collectCount:
-            _getInt(fields, ['收藏数', '收藏', 'collect_count', 'collects']),
+            _getInt(fields, ['收藏数', '收藏', 'collect_count', 'collects', '收藏量']),
         publishDate:
-            _getString(fields, ['发布时间', '发布日期', 'publish_date', 'date']),
-        finishRate: _getDouble(fields, ['完播率', 'finish_rate']),
+            _getString(fields, ['发布时间', '发布日期', 'publish_date', 'date', '创建时间', '发布时刻']),
+        finishRate: _getDouble(fields, ['完播率', 'finish_rate', '整体完播率']),
         avgWatchDuration:
-            _getDouble(fields, ['平均观看时长', 'avg_watch_duration']),
+            _getDouble(fields, ['平均观看时长', 'avg_watch_duration', '均观时长', '人均观看时长', 'AVD']),
+        twoSecondExitRate: _getDouble(fields, ['2s跳出率', '2秒跳出率', '两秒跳出率', 'two_second_exit_rate', '2s跳出']),
+        fiveSecondFinishRate: _getDouble(fields, ['5s完播率', '5秒完播率', '五秒完播率', 'five_second_finish_rate', '5s完播']),
+        coverCtr: _getDouble(fields, ['封面点击率', '点击率', 'CTR', 'cover_ctr', 'ctr', '封面点击']),
+        profileVisits: _getInt(fields, ['主页访问量', '主页访问', 'profile_visits', '主页访客', '个人主页访问']),
+        fullPlayCount: _getInt(fields, ['完整播放次数', '完整播放', 'full_play_count', '完播数']),
+        newFollowers: _getInt(fields, ['新增粉丝', '粉丝增量', '涨粉', '净增粉丝', 'new_followers', '粉丝净增']),
+        totalDuration: _getDouble(fields, ['视频时长', '时长', 'duration', '片长']),
+        trafficRecommend: _getDouble(fields, ['推荐流量', '推荐流量占比', 'traffic_recommend', '推荐']),
+        trafficSearch: _getDouble(fields, ['搜索流量', '搜索流量占比', 'traffic_search', '搜索']),
+        trafficFollow: _getDouble(fields, ['关注流量', '关注流量占比', 'traffic_follow', '关注']),
+        trafficCity: _getDouble(fields, ['同城流量', '同城流量占比', 'traffic_city', '同城']),
+        trafficProfile: _getDouble(fields, ['主页流量', '主页流量占比', 'traffic_profile', '个人主页']),
+        trafficHotspot: _getDouble(fields, ['热点流量', '热点流量占比', 'traffic_hotspot', '热点']),
+        trafficDoujia: _getDouble(fields, ['DOU+流量', 'DOU+流量占比', 'traffic_doujia', 'Dou+', 'DOU+']),
+        audienceMaleRatio: _getDouble(fields, ['男性粉丝占比', '男性占比', 'audience_male_ratio', '男粉占比', '男性比例']),
+        audienceFemaleRatio: _getDouble(fields, ['女性粉丝占比', '女性占比', 'audience_female_ratio', '女粉占比', '女性比例']),
+        audienceAgeDist: _getJsonStr(fields, ['年龄分布', 'audience_age_dist', '年龄分布数据', '粉丝年龄']),
+        audienceRegionDist: _getJsonStr(fields, ['地域分布', 'audience_region_dist', '地域分布数据', '粉丝地域']),
+        likeRate: _getDouble(fields, ['点赞率', 'like_rate', '播赞比']),
+        commentRate: _getDouble(fields, ['评论率', 'comment_rate', '播评比']),
+        shareRate: _getDouble(fields, ['分享率', 'share_rate', '播转率']),
+        collectRate: _getDouble(fields, ['收藏率', 'collect_rate', '播藏率']),
+        interactionRate: _getDouble(fields, ['互动率', 'interaction_rate', '综合互动率']),
       );
     }).toList();
   }
@@ -200,8 +224,23 @@ class FeishuService {
     for (final key in keys) {
       final val = map[key];
       if (val != null) {
-        final str = val.toString().replaceAll('%', '');
-        return double.tryParse(str);
+        var str = val.toString().replaceAll('%', '');
+        final num = double.tryParse(str);
+        if (num != null) {
+          return val.toString().contains('%') ? num / 100.0 : num;
+        }
+      }
+    }
+    return null;
+  }
+
+  static String? _getJsonStr(Map<String, dynamic> map, List<String> keys) {
+    for (final key in keys) {
+      final val = map[key];
+      if (val != null && val.toString().isNotEmpty) {
+        final str = val.toString().trim();
+        if (str.startsWith('{') || str.startsWith('[')) return str;
+        return str;
       }
     }
     return null;
@@ -225,6 +264,7 @@ class FeishuConfig {
 
 /// 从飞书多维表格解析出的抖音视频指标
 class FeishuDouyinMetric {
+  final String videoId;
   final String videoTitle;
   final int playCount;
   final int likeCount;
@@ -239,8 +279,33 @@ class FeishuDouyinMetric {
   final int profileVisits;
   final int fullPlayCount;
   final double? fiveSecondFinishRate;
+  final int newFollowers;
+  final double? totalDuration;
+
+  // 流量来源
+  final double? trafficRecommend;
+  final double? trafficSearch;
+  final double? trafficFollow;
+  final double? trafficCity;
+  final double? trafficProfile;
+  final double? trafficHotspot;
+  final double? trafficDoujia;
+
+  // 粉丝画像
+  final double? audienceMaleRatio;
+  final double? audienceFemaleRatio;
+  final String? audienceAgeDist;
+  final String? audienceRegionDist;
+
+  // 衍生互动率
+  final double? likeRate;
+  final double? commentRate;
+  final double? shareRate;
+  final double? collectRate;
+  final double? interactionRate;
 
   FeishuDouyinMetric({
+    this.videoId = '',
     required this.videoTitle,
     required this.playCount,
     required this.likeCount,
@@ -255,9 +320,28 @@ class FeishuDouyinMetric {
     this.profileVisits = 0,
     this.fullPlayCount = 0,
     this.fiveSecondFinishRate,
+    this.newFollowers = 0,
+    this.totalDuration,
+    this.trafficRecommend,
+    this.trafficSearch,
+    this.trafficFollow,
+    this.trafficCity,
+    this.trafficProfile,
+    this.trafficHotspot,
+    this.trafficDoujia,
+    this.audienceMaleRatio,
+    this.audienceFemaleRatio,
+    this.audienceAgeDist,
+    this.audienceRegionDist,
+    this.likeRate,
+    this.commentRate,
+    this.shareRate,
+    this.collectRate,
+    this.interactionRate,
   });
 
   Map<String, dynamic> toJson() => {
+        'video_id': videoId,
         'videoTitle': videoTitle,
         'playCount': playCount,
         'likeCount': likeCount,
@@ -272,6 +356,24 @@ class FeishuDouyinMetric {
         'profileVisits': profileVisits,
         'fullPlayCount': fullPlayCount,
         'fiveSecondFinishRate': fiveSecondFinishRate,
+        'newFollowers': newFollowers,
+        'totalDuration': totalDuration,
+        'trafficRecommend': trafficRecommend,
+        'trafficSearch': trafficSearch,
+        'trafficFollow': trafficFollow,
+        'trafficCity': trafficCity,
+        'trafficProfile': trafficProfile,
+        'trafficHotspot': trafficHotspot,
+        'trafficDoujia': trafficDoujia,
+        'audienceMaleRatio': audienceMaleRatio,
+        'audienceFemaleRatio': audienceFemaleRatio,
+        'audienceAgeDist': audienceAgeDist,
+        'audienceRegionDist': audienceRegionDist,
+        'likeRate': likeRate,
+        'commentRate': commentRate,
+        'shareRate': shareRate,
+        'collectRate': collectRate,
+        'interactionRate': interactionRate,
       };
 }
 

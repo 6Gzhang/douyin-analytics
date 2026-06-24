@@ -11,8 +11,11 @@ import 'features/reports/benchmark_report_page.dart';
 import 'features/reports/title_analysis_page.dart';
 import 'features/reports/publish_calendar_page.dart';
 import 'features/reports/retention_report_page.dart';
+import 'features/reports/traffic_source_page.dart';
+import 'features/reports/cover_analysis_page.dart';
 import 'features/ai_assistant/ai_assistant_page.dart';
 import 'features/settings/settings_page.dart';
+import 'features/settings/auto_sync_settings_page.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/',
@@ -46,7 +49,10 @@ final goRouter = GoRouter(
     GoRoute(path: '/report/title', builder: (_, __) => const TitleAnalysisPage()),
     GoRoute(path: '/report/calendar', builder: (_, __) => const PublishCalendarPage()),
     GoRoute(path: '/report/retention', builder: (_, __) => const RetentionReportPage()),
+    GoRoute(path: '/report/traffic', builder: (_, __) => const TrafficSourcePage()),
+    GoRoute(path: '/report/cover', builder: (_, __) => const CoverAnalysisPage()),
     GoRoute(path: '/ai-assistant', builder: (_, __) => const AiAssistantPage()),
+    GoRoute(path: '/settings/auto-sync', builder: (_, __) => const AutoSyncSettingsPage()),
   ],
 );
 

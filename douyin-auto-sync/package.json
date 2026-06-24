@@ -1,0 +1,32 @@
+{
+  "name": "douyin-auto-sync",
+  "version": "1.0.0",
+  "description": "抖音数据自动同步工具 - 浏览器自动化导出+多设备同步",
+  "main": "scripts/douyin_scraper.js",
+  "scripts": {
+    "scrape": "node scripts/douyin_scraper.js",
+    "sync": "node scripts/sync.js",
+    "start": "node scripts/scheduler.js",
+    "setup": "node scripts/setup.js",
+    "init": "node scripts/init_config.js",
+    "import": "node scripts/auto_import.js",
+    "test": "node scripts/test.js",
+    "test:git": "node scripts/test_git_sync.js",
+    "set-creds": "node scripts/set_credentials.js",
+    "status": "node scripts/scheduler.js --status"
+  },
+  "keywords": ["douyin", "automation", "sync"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^2.7.0",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.2.0",
+    "crypto-js": "^4.2.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1"
+  }
+}

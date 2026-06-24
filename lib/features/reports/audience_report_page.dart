@@ -11,12 +11,10 @@ class AudienceReportPage extends ConsumerStatefulWidget {
   const AudienceReportPage({super.key});
 
   @override
-  ConsumerState<AudienceReportPage> createState() =>
-      _AudienceReportPageState();
+  ConsumerState<AudienceReportPage> createState() => _AudienceReportPageState();
 }
 
-class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
-    with SingleTickerProviderStateMixin {
+class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with SingleTickerProviderStateMixin {
   final _db = AppDatabase();
   bool _loading = true;
   late TabController _tabController;
@@ -28,6 +26,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
   double _likeRate = 0.0;
   double _commentRate = 0.0;
   double _shareRate = 0.0;
+  double _collectRate = 0.0;
 
   double _maleRatio = 0.5;
   double _femaleRatio = 0.5;
@@ -44,6 +43,11 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     '60-80%': 0,
     '80-100%': 0,
   };
+
+  String _coreAgeGroup = '';
+  double _coreAgeRatio = 0;
+  String _topRegion = '';
+  double _topRegionRatio = 0;
 
   @override
   void initState() {
@@ -62,7 +66,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     setState(() => _loading = true);
     try {
       final videos = await _db.getAllVideosWithMetrics();
-      int plays = 0, likes = 0, comments = 0, shares = 0;
+      int plays = 0, likes = 0, comments = 0, shares = 0, collects = 0;
       double totalFinishRate = 0, totalWatch = 0;
       int finishRateCount = 0, watchCount = 0;
 
@@ -77,6 +81,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         likes += (v['like_count'] as int?) ?? 0;
         comments += (v['comment_count'] as int?) ?? 0;
         shares += (v['share_count'] as int?) ?? 0;
+        collects += (v['collect_count'] as int?) ?? 0;
 
         final fr = (v['finish_rate'] as double?) ?? 0.0;
         final aw = (v['avg_watch_duration'] as double?) ?? 0.0;
@@ -140,6 +145,11 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
       if (ageAgg.isNotEmpty) {
         final total = ageAgg.values.fold<double>(0, (s, v) => s + v);
         _ageDistribution = ageAgg.map((k, v) => MapEntry(k, v / total));
+        final sortedAge = _ageDistribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+        if (sortedAge.isNotEmpty) {
+          _coreAgeGroup = sortedAge.first.key;
+          _coreAgeRatio = sortedAge.first.value;
+        }
       }
 
       if (regionAgg.isNotEmpty) {
@@ -151,6 +161,8 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         if (_regionDistribution.length > 10) {
           _regionDistribution = _regionDistribution.sublist(0, 10);
         }
+        _topRegion = _regionDistribution.first.key;
+        _topRegionRatio = _regionDistribution.first.value;
       }
 
       if (!mounted) return;
@@ -162,6 +174,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         _likeRate = plays > 0 ? likes / plays * 100 : 0;
         _commentRate = plays > 0 ? comments / plays * 100 : 0;
         _shareRate = plays > 0 ? shares / plays * 100 : 0;
+        _collectRate = plays > 0 ? collects / plays * 100 : 0;
         _hasAudienceData = audienceDataCount > 0;
         _loading = false;
       });
@@ -171,11 +184,41 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     }
   }
 
+  Future<void> _runAiInterpretation() async {
+    if (_aiInterpreting) return;
+    setState(() => _aiInterpreting = true);
+    try {
+      final stats = {
+        'male_ratio': _maleRatio,
+        'female_ratio': _femaleRatio,
+        'age_distribution': _ageDistribution,
+        'region_distribution': _regionDistribution.asMap().map((k, v) => MapEntry(v.key, v.value)),
+        'avg_finish_rate': _avgFinishRate,
+        'avg_watch_duration': _avgWatchDuration,
+        'like_rate': _likeRate,
+        'comment_rate': _commentRate,
+        'share_rate': _shareRate,
+      };
+      final result = await AiService.instance.audienceInterpretation(stats);
+      if (!mounted) return;
+      setState(() {
+        _aiInterpretation = result;
+        _aiInterpreting = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _aiInterpretation = '分析失败: $e';
+        _aiInterpreting = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('受众分析'),
+        title: const Text('粉丝画像'),
         bottom: _loading
             ? null
             : TabBar(
@@ -195,11 +238,8 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_totalVideos == 0) {
-      return Center(
-        child: Text('暂无数据', style: TextStyle(color: Colors.grey[500])),
-      );
+      return Center(child: Text('暂无数据', style: TextStyle(color: Colors.grey[500])));
     }
-
     return TabBarView(
       controller: _tabController,
       children: [
@@ -217,6 +257,8 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         _buildOverviewCard(),
         const SizedBox(height: 10),
         _buildFinishRateCard(),
+        const SizedBox(height: 10),
+        _buildEngagementRateCard(),
         const SizedBox(height: 60),
       ],
     );
@@ -232,8 +274,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
             children: [
               Icon(Icons.pie_chart_outline, size: 48, color: Colors.grey[300]),
               const SizedBox(height: 12),
-              Text('暂无粉丝画像数据',
-                  style: TextStyle(fontSize: 15, color: Colors.grey[600])),
+              Text('暂无粉丝画像数据', style: TextStyle(fontSize: 15, color: Colors.grey[600])),
               const SizedBox(height: 6),
               Text(
                 '导入包含粉丝画像的 CSV 数据后可查看性别、年龄、地域分布',
@@ -260,6 +301,8 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
           ],
         ),
         const SizedBox(height: 10),
+        _buildAudienceInsightCard(),
+        const SizedBox(height: 10),
         _buildRegionCard(),
         const SizedBox(height: 60),
       ],
@@ -271,6 +314,8 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
       padding: const EdgeInsets.all(10),
       children: [
         _buildEngagementCard(),
+        const SizedBox(height: 10),
+        _buildEngagementTipsCard(),
         const SizedBox(height: 60),
       ],
     );
@@ -286,42 +331,21 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
           children: [
             Row(
               children: [
-                Container(
-                  width: 3, height: 14,
-                  decoration: BoxDecoration(
-                    color: AppTheme.douyinRed,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.douyinRed, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 6),
-                const Text('核心指标',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                const Text('核心指标', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: _metricBox('总播放', formatCount(_totalPlays),
-                      AppTheme.douyinRed),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _metricBox('均完播率',
-                      '${_avgFinishRate.toStringAsFixed(1)}%',
-                      const Color(0xFF4CAF50)),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _metricBox('均观看时长',
-                      '${_avgWatchDuration.toStringAsFixed(1)}s',
-                      AppTheme.douyinCyan),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _metricBox('视频数', '$_totalVideos',
-                      AppTheme.accentPurple),
-                ),
+                Expanded(child: _metricBox('总播放', formatCount(_totalPlays), AppTheme.douyinRed)),
+                const SizedBox(width: 6),
+                Expanded(child: _metricBox('均完播率', '${_avgFinishRate.toStringAsFixed(1)}%', AppTheme.accentGreen)),
+                const SizedBox(width: 6),
+                Expanded(child: _metricBox('均观看时长', '${_avgWatchDuration.toStringAsFixed(1)}s', AppTheme.douyinCyan)),
+                const SizedBox(width: 6),
+                Expanded(child: _metricBox('视频数', '$_totalVideos', AppTheme.accentPurple)),
               ],
             ),
           ],
@@ -332,19 +356,13 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
 
   Widget _metricBox(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-          const SizedBox(height: 3),
-          Text(label,
-              style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
         ],
       ),
     );
@@ -370,62 +388,134 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
           children: [
             Row(
               children: [
-                Container(
-                  width: 3, height: 14,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGreen,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentGreen, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 6),
-                const Text('完播率分布',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                const Text('完播率分布', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 10),
             if (total == 0)
-              Text('暂无完播率数据',
-                  style: TextStyle(color: Colors.grey[500]))
+              Text('暂无完播率数据', style: TextStyle(color: Colors.grey[500]))
             else
               ...buckets.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final bucket = entry.value;
                 final ratio = bucket.value / total;
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(bottom: 5),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 50,
-                        child: Text(bucket.key,
-                            style: const TextStyle(fontSize: 12)),
-                      ),
+                      SizedBox(width: 48, child: Text(bucket.key, style: const TextStyle(fontSize: 11))),
                       Expanded(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: LinearProgressIndicator(
                             value: ratio,
-                            minHeight: 12,
-                            backgroundColor:
-                                colors[idx].withValues(alpha: 0.15),
-                            valueColor:
-                                AlwaysStoppedAnimation(colors[idx]),
+                            minHeight: 10,
+                            backgroundColor: colors[idx].withValues(alpha: 0.15),
+                            valueColor: AlwaysStoppedAnimation(colors[idx]),
                           ),
                         ),
                       ),
                       const SizedBox(width: 6),
-                      SizedBox(
-                        width: 28,
-                        child: Text(
-                          bucket.value.toString(),
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
+                      SizedBox(width: 28, child: Text(bucket.value.toString(), textAlign: TextAlign.right, style: const TextStyle(fontSize: 11))),
                     ],
                   ),
                 );
               }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEngagementRateCard() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentBlue, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                const Text('互动率概览', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _rateItem('点赞率', _likeRate, AppTheme.douyinRed)),
+                Expanded(child: _rateItem('评论率', _commentRate, AppTheme.accentBlue)),
+                Expanded(child: _rateItem('转发率', _shareRate, AppTheme.accentGreen)),
+                Expanded(child: _rateItem('收藏率', _collectRate, AppTheme.accentAmber)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rateItem(String label, double value, Color color) {
+    return Column(
+      children: [
+        Text('${value.toStringAsFixed(2)}%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+      ],
+    );
+  }
+
+  Widget _buildAiInterpretationCard() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentPurple, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                const Expanded(child: Text('AI 粉丝画像解读', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                if (_aiInterpreting)
+                  const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                const Icon(Icons.auto_awesome, size: 14, color: AppTheme.accentPurple),
+              ],
+            ),
+            if (_aiInterpretation != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentPurple.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(_aiInterpretation!, style: const TextStyle(fontSize: 12, height: 1.6)),
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(onPressed: _aiInterpreting ? null : _runAiInterpretation, child: const Text('重新解读', style: TextStyle(fontSize: 11))),
+              ),
+            ] else ...[
+              const SizedBox(height: 8),
+              Text('AI 智能分析粉丝画像，告诉你受众是谁、喜欢什么内容', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _aiInterpreting ? null : _runAiInterpretation,
+                  icon: const Icon(Icons.auto_awesome, size: 14),
+                  label: const Text('智能解读', style: TextStyle(fontSize: 12)),
+                  style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8), backgroundColor: AppTheme.accentPurple),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -440,11 +530,10 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('性别分布',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
+            const Text('性别分布', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 130,
+              height: 110,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
@@ -453,38 +542,28 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
                     PieChartSectionData(
                       value: _maleRatio * 100,
                       color: AppTheme.accentBlue,
+                      radius: 32,
                       title: '${(_maleRatio * 100).toStringAsFixed(0)}%',
-                      radius: 36,
-                      titleStyle: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                      titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     PieChartSectionData(
                       value: _femaleRatio * 100,
                       color: AppTheme.douyinRed,
+                      radius: 32,
                       title: '${(_femaleRatio * 100).toStringAsFixed(0)}%',
-                      radius: 36,
-                      titleStyle: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                      titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _legendDot(AppTheme.accentBlue),
-                const SizedBox(width: 4),
-                const Text('男', style: TextStyle(fontSize: 11)),
-                const SizedBox(width: 16),
-                _legendDot(AppTheme.douyinRed),
-                const SizedBox(width: 4),
-                const Text('女', style: TextStyle(fontSize: 11)),
+                _dotLegend('男性', AppTheme.accentBlue),
+                const SizedBox(width: 12),
+                _dotLegend('女性', AppTheme.douyinRed),
               ],
             ),
           ],
@@ -493,34 +572,27 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     );
   }
 
-  Widget _buildAgeCard() {
-    final entries = _ageDistribution.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-    if (entries.isEmpty) {
-      return Card(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('年龄分布',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              Text('暂无年龄数据', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
-            ],
-          ),
-        ),
-      );
-    }
+  Widget _dotLegend(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+      ],
+    );
+  }
 
-    final maxVal = entries.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+  Widget _buildAgeCard() {
+    final entries = _ageDistribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final maxVal = entries.isNotEmpty ? entries.first.value : 1.0;
     final colors = [
       AppTheme.accentBlue,
       AppTheme.accentPurple,
-      AppTheme.douyinRed,
-      AppTheme.accentAmber,
       AppTheme.accentGreen,
+      AppTheme.accentAmber,
+      AppTheme.douyinRed,
+      AppTheme.douyinCyan,
     ];
 
     return Card(
@@ -530,67 +602,95 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('年龄分布',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 130,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxVal * 1.2,
-                  barTouchData: BarTouchData(enabled: false),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          if (idx < 0 || idx >= entries.length) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              entries[idx].key.replaceAll('岁', ''),
-                              style: TextStyle(
-                                  fontSize: 9, color: Colors.grey[600]),
+            const Text('年龄分布', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            if (entries.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('暂无年龄数据', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+              )
+            else
+              Column(
+                children: entries.take(5).map((e) {
+                  final idx = entries.indexOf(e);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 50, child: Text(e.key, style: const TextStyle(fontSize: 10))),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(2),
+                            child: LinearProgressIndicator(
+                              value: (e.value / maxVal).clamp(0.0, 1.0),
+                              minHeight: 8,
+                              backgroundColor: colors[idx % colors.length].withValues(alpha: 0.15),
+                              valueColor: AlwaysStoppedAnimation(colors[idx % colors.length]),
                             ),
-                          );
-                        },
-                        reservedSize: 20,
-                      ),
-                    ),
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barGroups: entries.asMap().entries.map((entry) {
-                    final idx = entry.key;
-                    final e = entry.value;
-                    return BarChartGroupData(
-                      x: idx,
-                      barRods: [
-                        BarChartRodData(
-                          toY: e.value,
-                          color: colors[idx % colors.length],
-                          width: 16,
-                          borderRadius: BorderRadius.circular(3),
+                          ),
                         ),
+                        const SizedBox(width: 4),
+                        SizedBox(width: 30, child: Text('${(e.value * 100).toStringAsFixed(1)}%', textAlign: TextAlign.right, style: const TextStyle(fontSize: 9))),
                       ],
-                    );
-                  }).toList(),
-                ),
+                    ),
+                  );
+                }).toList(),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudienceInsightCard() {
+    final dominantGender = _maleRatio > 0.6
+        ? '男性为主'
+        : _femaleRatio > 0.6
+            ? '女性为主'
+            : '性别均衡';
+    final genderColor = _maleRatio > 0.6
+        ? AppTheme.accentBlue
+        : _femaleRatio > 0.6
+            ? AppTheme.douyinRed
+            : AppTheme.accentPurple;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentGreen, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                const Text('核心受众特征', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _featureItem('性别特征', dominantGender, _maleRatio > _femaleRatio ? '${(_maleRatio * 100).toStringAsFixed(1)}%男性' : '${(_femaleRatio * 100).toStringAsFixed(1)}%女性', Icons.person_outline, genderColor),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _featureItem('核心年龄', _coreAgeGroup, '占比${(_coreAgeRatio * 100).toStringAsFixed(1)}%', Icons.cake_outlined, AppTheme.accentPurple),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _featureItem('TOP地区', _topRegion, '占比${(_topRegionRatio * 100).toStringAsFixed(1)}%', Icons.location_on_outlined, AppTheme.accentGreen),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _featureItem('完播率', '${_avgFinishRate.toStringAsFixed(1)}%', _avgFinishRate > 30 ? '表现优秀' : '有待提升', Icons.play_circle_outline, _avgFinishRate > 30 ? AppTheme.accentGreen : AppTheme.accentAmber),
+                ),
+              ],
             ),
           ],
         ),
@@ -598,102 +698,145 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     );
   }
 
-  Widget _buildRegionCard() {
-    if (_regionDistribution.isEmpty) {
-      return Card(
-        margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _featureItem(String title, String main, String sub, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Text('地域分布 TOP10',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
-              Text('暂无地域数据', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+              Icon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
+              Text(title, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
             ],
           ),
-        ),
-      );
-    }
+          const SizedBox(height: 4),
+          Text(main, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 1),
+          Text(sub, style: TextStyle(fontSize: 9, color: Colors.grey[500]), maxLines: 1, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildRegionCard() {
+    final maxVal = _regionDistribution.isNotEmpty ? _regionDistribution.first.value : 1.0;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  width: 3, height: 14,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentAmber,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentAmber, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 6),
-                const Text('地域分布 TOP10',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                const Text('地域分布 TOP10', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
-            const SizedBox(height: 8),
-            ..._regionDistribution.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final region = entry.value;
+            const SizedBox(height: 10),
+            if (_regionDistribution.isEmpty)
+              Text('暂无地域数据', style: TextStyle(fontSize: 11, color: Colors.grey[500]))
+            else
+              ..._regionDistribution.take(10).asMap().entries.map((entry) {
+                final idx = entry.key;
+                final region = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: idx < 3 ? AppTheme.accentAmber.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text('${idx + 1}', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: idx < 3 ? AppTheme.accentAmber : Colors.grey[600])),
+                      ),
+                      const SizedBox(width: 6),
+                      SizedBox(width: 55, child: Text(region.key, style: const TextStyle(fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: (region.value / maxVal).clamp(0.0, 1.0),
+                            minHeight: 7,
+                            backgroundColor: AppTheme.accentAmber.withValues(alpha: 0.12),
+                            valueColor: const AlwaysStoppedAnimation(AppTheme.accentAmber),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(width: 32, child: Text('${(region.value * 100).toStringAsFixed(1)}%', textAlign: TextAlign.right, style: const TextStyle(fontSize: 9))),
+                    ],
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEngagementCard() {
+    final rates = [
+      _EngagementRate('点赞率', _likeRate, AppTheme.douyinRed, Icons.thumb_up_outlined),
+      _EngagementRate('评论率', _commentRate, AppTheme.accentBlue, Icons.comment_outlined),
+      _EngagementRate('转发率', _shareRate, AppTheme.accentGreen, Icons.share_outlined),
+      _EngagementRate('收藏率', _collectRate, AppTheme.accentAmber, Icons.star_border),
+    ];
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.douyinRed, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                const Text('互动率分析', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...rates.map((r) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Row(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Column(
                   children: [
-                    Container(
-                      width: 20, height: 20,
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentAmber.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        '${idx + 1}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.accentAmber,
-                        ),
+                    Row(
+                      children: [
+                        Icon(r.icon, size: 14, color: r.color),
+                        const SizedBox(width: 6),
+                        Text(r.label, style: const TextStyle(fontSize: 12)),
+                        const Spacer(),
+                        Text('${r.value.toStringAsFixed(2)}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: r.color)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: (r.value / 20).clamp(0.0, 1.0),
+                        minHeight: 8,
+                        backgroundColor: r.color.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation(r.color),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 70,
-                      child: Text(
-                        region.key,
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: LinearProgressIndicator(
-                          value: region.value,
-                          minHeight: 6,
-                          backgroundColor:
-                              AppTheme.accentAmber.withValues(alpha: 0.1),
-                          valueColor:
-                              const AlwaysStoppedAnimation(AppTheme.accentAmber),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        '${(region.value * 100).toStringAsFixed(1)}%',
-                        textAlign: TextAlign.right,
-                        style:
-                            TextStyle(fontSize: 11, color: Colors.grey[600]),
-                      ),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_getRateLevel(r.value), style: TextStyle(fontSize: 9, color: _getRateColor(r.value))),
+                        Text('行业均值约 3-5%', style: TextStyle(fontSize: 9, color: Colors.grey[400])),
+                      ],
                     ),
                   ],
                 ),
@@ -705,146 +848,21 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
     );
   }
 
-  Widget _buildAiInterpretationCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: _aiInterpreting
-          ? null
-          : () async {
-              setState(() {
-                _aiInterpreting = true;
-              });
-              try {
-                final ai = AiService.instance;
-                final result = await ai.audienceInterpretation(
-                  maleRatio: _maleRatio,
-                  ageDistribution: _ageDistribution,
-                  topRegions: _regionDistribution.take(5).toList(),
-                );
-                if (!mounted) return;
-                setState(() {
-                  _aiInterpretation = result;
-                });
-              } catch (e) {
-                if (!mounted) return;
-                setState(() {
-                  _aiInterpretation = '解读失败: $e';
-                });
-              } finally {
-                if (mounted) {
-                  setState(() {
-                    _aiInterpreting = false;
-                  });
-                }
-              }
-            },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF2A1F3D), const Color(0xFF1A1A2E)]
-                : [const Color(0xFFF3E8FF), const Color(0xFFEEF2FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: _aiInterpreting
-            ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('AI 解读中...',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                ],
-              )
-            : _aiInterpretation != null
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.auto_awesome,
-                              color: AppTheme.accentPurple, size: 16),
-                          const SizedBox(width: 6),
-                          const Text('AI 粉丝画像解读',
-                              style: TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
-                          const Spacer(),
-                          Text('重新解读',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.accentPurple,
-                                  fontWeight: FontWeight.w500)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(_aiInterpretation!,
-                          style: TextStyle(
-                              fontSize: 12,
-                              height: 1.6,
-                              color: Colors.grey[800])),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Container(
-                        width: 32, height: 32,
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentPurple.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.psychology_alt,
-                            color: AppTheme.accentPurple, size: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('AI 智能解读粉丝画像',
-                                style: TextStyle(
-                                    fontSize: 13, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 2),
-                            Text('基于性别、年龄、地域生成专业分析',
-                                style: TextStyle(
-                                    fontSize: 11, color: Colors.grey[600])),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 12, color: Colors.grey[400]),
-                    ],
-                  ),
-      ),
-    );
+  String _getRateLevel(double rate) {
+    if (rate >= 8) return '表现优秀';
+    if (rate >= 5) return '高于均值';
+    if (rate >= 3) return '中等水平';
+    return '有待提升';
   }
 
-  Widget _legendDot(Color color) {
-    return Container(
-      width: 8, height: 8,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
+  Color _getRateColor(double rate) {
+    if (rate >= 8) return AppTheme.accentGreen;
+    if (rate >= 5) return AppTheme.accentBlue;
+    if (rate >= 3) return AppTheme.accentAmber;
+    return AppTheme.douyinRed;
   }
 
-  Widget _buildEngagementCard() {
+  Widget _buildEngagementTipsCard() {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -854,88 +872,50 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage>
           children: [
             Row(
               children: [
-                Container(
-                  width: 3, height: 14,
-                  decoration: BoxDecoration(
-                    color: AppTheme.douyinCyan,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                Container(width: 3, height: 14, decoration: BoxDecoration(color: AppTheme.accentGreen, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 6),
-                const Text('互动率分析',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                const Text('互动提升建议', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
-            const SizedBox(height: 12),
-            _engagementRow('点赞率', _likeRate, AppTheme.douyinRed),
-            _engagementRow('评论率', _commentRate, const Color(0xFF7C4DFF)),
-            _engagementRow('分享率', _shareRate, AppTheme.douyinCyan),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.lightbulb, size: 16, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _getEngagementTip(),
-                      style: TextStyle(fontSize: 11, color: Colors.grey[700], height: 1.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 10),
+            _tipItem(Icons.question_mark, '引导互动', '视频结尾设置问题或投票，引导观众评论'),
+            _tipItem(Icons.emoji_events, '制造争议', '选择有讨论空间的话题，激发评论区讨论'),
+            _tipItem(Icons.star, '提供价值', '干货内容提升收藏率，让观众觉得有用'),
+            _tipItem(Icons.share, '社交属性', '内容具有传播性，让观众愿意分享给朋友'),
           ],
         ),
       ),
     );
   }
 
-  String _getEngagementTip() {
-    if (_likeRate < 2) {
-      return '点赞率偏低，建议优化视频开头3秒钩子，提升内容价值感，引导观众点赞收藏。';
-    } else if (_commentRate < 0.2) {
-      return '评论率偏低，建议在视频中设置互动话题、提问或争议性观点，激发评论欲望。';
-    } else if (_shareRate < 0.1) {
-      return '分享率偏低，建议增加实用干货、情感共鸣或社交货币属性的内容，提升转发意愿。';
-    }
-    return '互动数据表现良好，继续保持内容质量，可尝试更多互动玩法提升粉丝粘性。';
-  }
-
-  Widget _engagementRow(String label, double rate, Color color) {
+  Widget _tipItem(IconData icon, String title, String desc) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-              width: 55,
-              child: Text(label, style: const TextStyle(fontSize: 12))),
+          Icon(icon, size: 14, color: AppTheme.accentBlue),
+          const SizedBox(width: 8),
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: (rate / 10).clamp(0.0, 1.0),
-                minHeight: 10,
-                backgroundColor: color.withValues(alpha: 0.12),
-                valueColor: AlwaysStoppedAnimation(color),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 1),
+                Text(desc, style: TextStyle(fontSize: 11, color: Colors.grey[600], height: 1.3)),
+              ],
             ),
-          ),
-          const SizedBox(width: 6),
-          SizedBox(
-            width: 44,
-            child: Text('${rate.toStringAsFixed(2)}%',
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
+}
+
+class _EngagementRate {
+  final String label;
+  final double value;
+  final Color color;
+  final IconData icon;
+  _EngagementRate(this.label, this.value, this.color, this.icon);
 }

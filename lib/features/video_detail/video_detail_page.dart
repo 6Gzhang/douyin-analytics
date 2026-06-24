@@ -4,6 +4,7 @@ import '../../core/format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database/database.dart';
 import '../../services/ai_service.dart';
+import '../../utils/video_quality_analyzer.dart';
 
 class VideoDetailPage extends ConsumerStatefulWidget {
   final String videoId;
@@ -141,7 +142,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
     return Column(
       children: [
-        _buildHeader(title, dateStr),
+        _buildHeader(title, dateStr, playCount, likeCount, commentCount,
+            shareCount, collectCount, finishRate, avgWatch, twoSecExitRate, coverCtr),
         Expanded(
           child: TabBarView(
             controller: _tabController,
@@ -170,14 +172,118 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   Widget _buildOverviewTab(int playCount, int likeCount, int commentCount,
       int shareCount, int collectCount, double finishRate, double avgWatch,
       double twoSecExitRate, double coverCtr) {
+    final duration = (_video?['duration'] as double?) ?? 0.0;
+    final newFollowers = (_metrics?['new_followers'] as int?) ?? 0;
+    final fiveSecFinish = (_metrics?['five_second_finish_rate'] as double?) ?? 0.0;
+
+    final analysis = playCount > 0
+        ? VideoQualityAnalyzer.analyzeStrengthsWeaknesses(
+            playCount: playCount,
+            likeCount: likeCount,
+            commentCount: commentCount,
+            shareCount: shareCount,
+            collectCount: collectCount,
+            finishRate: finishRate,
+            avgWatchDuration: avgWatch,
+            fiveSecondFinishRate: fiveSecFinish,
+            twoSecondExitRate: twoSecExitRate,
+            coverCtr: coverCtr,
+            newFollowers: newFollowers,
+            duration: duration,
+          )
+        : {'strengths': <String>[], 'weaknesses': <String>[]};
+
+    final strengths = List<String>.from(analysis['strengths'] ?? []);
+    final weaknesses = List<String>.from(analysis['weaknesses'] ?? []);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _buildMetricsGrid(playCount, likeCount, commentCount, shareCount,
             collectCount, finishRate, avgWatch, twoSecExitRate, coverCtr),
         const SizedBox(height: 16),
+        if (strengths.isNotEmpty || weaknesses.isNotEmpty)
+          _buildStrengthsWeaknessesCard(strengths, weaknesses),
+        const SizedBox(height: 16),
         _buildAdvancedDataNote(),
         const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildStrengthsWeaknessesCard(List<String> strengths, List<String> weaknesses) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.thumb_up, size: 16, color: Colors.green),
+                      SizedBox(width: 6),
+                      Text('优势', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (strengths.isEmpty)
+                    Text('暂无明显优势', style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                  else
+                    ...strengths.map((s) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.check_circle, size: 12, color: Colors.green),
+                          const SizedBox(width: 6),
+                          Expanded(child: Text(s, style: const TextStyle(fontSize: 12, height: 1.3))),
+                        ],
+                      ),
+                    )),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.arrow_downward, size: 16, color: Colors.orange),
+                      SizedBox(width: 6),
+                      Text('待提升', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.orange)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (weaknesses.isEmpty)
+                    Text('表现不错，继续保持', style: TextStyle(fontSize: 12, color: Colors.grey[500]))
+                  else
+                    ...weaknesses.map((w) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.warning, size: 12, color: Colors.orange),
+                          const SizedBox(width: 6),
+                          Expanded(child: Text(w, style: const TextStyle(fontSize: 12, height: 1.3))),
+                        ],
+                      ),
+                    )),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -208,7 +314,35 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     );
   }
 
-  Widget _buildHeader(String title, String date) {
+  Widget _buildHeader(String title, String date, int playCount, int likeCount,
+      int commentCount, int shareCount, int collectCount, double finishRate,
+      double avgWatch, double twoSecExit, double coverCtr) {
+    // 计算质量评分
+    final duration = (_video?['duration'] as double?) ?? 0.0;
+    final newFollowers = (_metrics?['new_followers'] as int?) ?? 0;
+    final fiveSecFinish = (_metrics?['five_second_finish_rate'] as double?) ?? 0.0;
+
+    final qualityScore = playCount > 0
+        ? VideoQualityAnalyzer.calculateQualityScore(
+            playCount: playCount,
+            likeCount: likeCount,
+            commentCount: commentCount,
+            shareCount: shareCount,
+            collectCount: collectCount,
+            finishRate: finishRate,
+            avgWatchDuration: avgWatch,
+            fiveSecondFinishRate: fiveSecFinish,
+            twoSecondExitRate: twoSecExit,
+            coverCtr: coverCtr,
+            newFollowers: newFollowers,
+            duration: duration,
+          )
+        : 0.0;
+
+    final grade = VideoQualityAnalyzer.getQualityGrade(qualityScore);
+    final gradeColor = Color(VideoQualityAnalyzer.getGradeColor(grade));
+    final gradeText = VideoQualityAnalyzer.getGradeText(grade);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -245,6 +379,60 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                           Text('发布: ${_formatDate(_video?['create_time'])}',
                               style: TextStyle(
                                   fontSize: 12, color: Colors.grey[500])),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: gradeColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  qualityScore.toStringAsFixed(0),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: gradeColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '分',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: gradeColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: gradeColor,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    gradeText,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _percentile,
+                            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          ),
                         ],
                       ),
                     ],

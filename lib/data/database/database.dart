@@ -17,7 +17,7 @@ class AppDatabase {
     final path = p.join(dir.path, 'dyanalytics.db');
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE videos (
@@ -47,14 +47,24 @@ class AppDatabase {
             profile_visits INTEGER DEFAULT 0,
             full_play_count INTEGER DEFAULT 0,
             five_second_finish_rate REAL DEFAULT 0,
+            new_followers INTEGER DEFAULT 0,
+            total_duration REAL,
             traffic_recommend REAL,
             traffic_search REAL,
             traffic_follow REAL,
             traffic_city REAL,
+            traffic_profile REAL,
+            traffic_hotspot REAL,
+            traffic_doujia REAL,
             audience_male_ratio REAL,
             audience_age_dist TEXT,
             audience_region_dist TEXT,
             audience_tgi TEXT,
+            like_rate REAL,
+            comment_rate REAL,
+            share_rate REAL,
+            collect_rate REAL,
+            interaction_rate REAL,
             fetched_at INTEGER NOT NULL,
             source TEXT NOT NULL,
             updated_at INTEGER DEFAULT 0,
@@ -116,6 +126,20 @@ class AppDatabase {
           if (!mcolNames.contains('profile_visits')) await db.execute("ALTER TABLE video_metrics ADD COLUMN profile_visits INTEGER DEFAULT 0");
           if (!mcolNames.contains('full_play_count')) await db.execute("ALTER TABLE video_metrics ADD COLUMN full_play_count INTEGER DEFAULT 0");
           if (!mcolNames.contains('five_second_finish_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN five_second_finish_rate REAL DEFAULT 0");
+        }
+        if (oldVersion < 5) {
+          final mcols = await db.rawQuery("PRAGMA table_info('video_metrics')");
+          final mcolNames = mcols.map((c) => c['name']).toSet();
+          if (!mcolNames.contains('new_followers')) await db.execute("ALTER TABLE video_metrics ADD COLUMN new_followers INTEGER DEFAULT 0");
+          if (!mcolNames.contains('total_duration')) await db.execute("ALTER TABLE video_metrics ADD COLUMN total_duration REAL");
+          if (!mcolNames.contains('traffic_profile')) await db.execute("ALTER TABLE video_metrics ADD COLUMN traffic_profile REAL");
+          if (!mcolNames.contains('traffic_hotspot')) await db.execute("ALTER TABLE video_metrics ADD COLUMN traffic_hotspot REAL");
+          if (!mcolNames.contains('traffic_doujia')) await db.execute("ALTER TABLE video_metrics ADD COLUMN traffic_doujia REAL");
+          if (!mcolNames.contains('like_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN like_rate REAL");
+          if (!mcolNames.contains('comment_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN comment_rate REAL");
+          if (!mcolNames.contains('share_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN share_rate REAL");
+          if (!mcolNames.contains('collect_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN collect_rate REAL");
+          if (!mcolNames.contains('interaction_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN interaction_rate REAL");
         }
       },
     );
@@ -225,14 +249,24 @@ class AppDatabase {
     int? profileVisits,
     int? fullPlayCount,
     double? fiveSecondFinishRate,
+    int? newFollowers,
+    double? totalDuration,
     double? trafficRecommend,
     double? trafficSearch,
     double? trafficFollow,
     double? trafficCity,
+    double? trafficProfile,
+    double? trafficHotspot,
+    double? trafficDoujia,
     double? audienceMaleRatio,
     String? audienceAgeDist,
     String? audienceRegionDist,
     String? audienceTgi,
+    double? likeRate,
+    double? commentRate,
+    double? shareRate,
+    double? collectRate,
+    double? interactionRate,
     required int fetchedAt,
     required String source,
   }) async {
@@ -252,16 +286,27 @@ class AppDatabase {
       if (profileVisits != null) u['profile_visits'] = profileVisits;
       if (fullPlayCount != null) u['full_play_count'] = fullPlayCount;
       if (fiveSecondFinishRate != null) u['five_second_finish_rate'] = fiveSecondFinishRate;
+      if (newFollowers != null) u['new_followers'] = newFollowers;
+      if (totalDuration != null) u['total_duration'] = totalDuration;
       if (trafficRecommend != null) u['traffic_recommend'] = trafficRecommend;
       if (trafficSearch != null) u['traffic_search'] = trafficSearch;
       if (trafficFollow != null) u['traffic_follow'] = trafficFollow;
       if (trafficCity != null) u['traffic_city'] = trafficCity;
+      if (trafficProfile != null) u['traffic_profile'] = trafficProfile;
+      if (trafficHotspot != null) u['traffic_hotspot'] = trafficHotspot;
+      if (trafficDoujia != null) u['traffic_doujia'] = trafficDoujia;
       if (audienceMaleRatio != null) u['audience_male_ratio'] = audienceMaleRatio;
       if (audienceAgeDist != null) u['audience_age_dist'] = audienceAgeDist;
       if (audienceRegionDist != null) u['audience_region_dist'] = audienceRegionDist;
       if (audienceTgi != null) u['audience_tgi'] = audienceTgi;
+      if (likeRate != null) u['like_rate'] = likeRate;
+      if (commentRate != null) u['comment_rate'] = commentRate;
+      if (shareRate != null) u['share_rate'] = shareRate;
+      if (collectRate != null) u['collect_rate'] = collectRate;
+      if (interactionRate != null) u['interaction_rate'] = interactionRate;
       u['fetched_at'] = fetchedAt;
       u['source'] = source;
+      u['updated_at'] = DateTime.now().millisecondsSinceEpoch;
       if (u.isNotEmpty) {
         await db.update('video_metrics', u, where: 'video_id = ?', whereArgs: [videoId]);
       }
@@ -280,16 +325,27 @@ class AppDatabase {
         'profile_visits': profileVisits ?? 0,
         'full_play_count': fullPlayCount ?? 0,
         'five_second_finish_rate': fiveSecondFinishRate ?? 0,
+        'new_followers': newFollowers ?? 0,
+        'total_duration': totalDuration,
         'traffic_recommend': trafficRecommend,
         'traffic_search': trafficSearch,
         'traffic_follow': trafficFollow,
         'traffic_city': trafficCity,
+        'traffic_profile': trafficProfile,
+        'traffic_hotspot': trafficHotspot,
+        'traffic_doujia': trafficDoujia,
         'audience_male_ratio': audienceMaleRatio,
         'audience_age_dist': audienceAgeDist,
         'audience_region_dist': audienceRegionDist,
         'audience_tgi': audienceTgi,
+        'like_rate': likeRate,
+        'comment_rate': commentRate,
+        'share_rate': shareRate,
+        'collect_rate': collectRate,
+        'interaction_rate': interactionRate,
         'fetched_at': fetchedAt,
         'source': source,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
       });
     }
   }
@@ -312,15 +368,23 @@ class AppDatabase {
         'total_likes': 0,
         'total_comments': 0,
         'total_shares': 0,
+        'total_collects': 0,
+        'avg_plays': 0.0,
         'avg_likes': 0.0,
         'avg_comments': 0.0,
         'avg_shares': 0.0,
+        'avg_collects': 0.0,
         'avg_finish_rate': 0.0,
         'avg_watch_duration': 0.0,
         'avg_cover_ctr': 0.0,
         'avg_two_second_exit_rate': 0.0,
+        'avg_five_second_finish_rate': 0.0,
         'total_profile_visits': 0,
         'total_full_plays': 0,
+        'traffic_recommend': 0.0,
+        'traffic_search': 0.0,
+        'traffic_follow': 0.0,
+        'traffic_city': 0.0,
       };
     }
     final stats = await db.rawQuery('''
@@ -329,16 +393,23 @@ class AppDatabase {
         COALESCE(SUM(m.like_count), 0) as total_likes,
         COALESCE(SUM(m.comment_count), 0) as total_comments,
         COALESCE(SUM(m.share_count), 0) as total_shares,
+        COALESCE(SUM(m.collect_count), 0) as total_collects,
         COALESCE(AVG(m.play_count), 0) as avg_plays,
         COALESCE(AVG(m.like_count), 0) as avg_likes,
         COALESCE(AVG(m.comment_count), 0) as avg_comments,
         COALESCE(AVG(m.share_count), 0) as avg_shares,
+        COALESCE(AVG(m.collect_count), 0) as avg_collects,
         COALESCE(AVG(m.finish_rate), 0) as avg_finish_rate,
         COALESCE(AVG(m.avg_watch_duration), 0) as avg_watch_duration,
         COALESCE(AVG(m.cover_ctr), 0) as avg_cover_ctr,
         COALESCE(AVG(m.two_second_exit_rate), 0) as avg_two_second_exit_rate,
+        COALESCE(AVG(m.five_second_finish_rate), 0) as avg_five_second_finish_rate,
         COALESCE(SUM(m.profile_visits), 0) as total_profile_visits,
-        COALESCE(SUM(m.full_play_count), 0) as total_full_plays
+        COALESCE(SUM(m.full_play_count), 0) as total_full_plays,
+        COALESCE(AVG(m.traffic_recommend), 0) as traffic_recommend,
+        COALESCE(AVG(m.traffic_search), 0) as traffic_search,
+        COALESCE(AVG(m.traffic_follow), 0) as traffic_follow,
+        COALESCE(AVG(m.traffic_city), 0) as traffic_city
       FROM video_metrics m
       INNER JOIN videos v ON v.id = m.video_id
     ''');
@@ -349,15 +420,47 @@ class AppDatabase {
       'total_likes': (row['total_likes'] as int?) ?? 0,
       'total_comments': (row['total_comments'] as int?) ?? 0,
       'total_shares': (row['total_shares'] as int?) ?? 0,
+      'total_collects': (row['total_collects'] as int?) ?? 0,
+      'avg_plays': (row['avg_plays'] as double?) ?? 0.0,
       'avg_likes': (row['avg_likes'] as double?) ?? 0.0,
       'avg_comments': (row['avg_comments'] as double?) ?? 0.0,
       'avg_shares': (row['avg_shares'] as double?) ?? 0.0,
+      'avg_collects': (row['avg_collects'] as double?) ?? 0.0,
       'avg_finish_rate': (row['avg_finish_rate'] as double?) ?? 0.0,
       'avg_watch_duration': (row['avg_watch_duration'] as double?) ?? 0.0,
       'avg_cover_ctr': (row['avg_cover_ctr'] as double?) ?? 0.0,
       'avg_two_second_exit_rate': (row['avg_two_second_exit_rate'] as double?) ?? 0.0,
+      'avg_five_second_finish_rate': (row['avg_five_second_finish_rate'] as double?) ?? 0.0,
       'total_profile_visits': (row['total_profile_visits'] as int?) ?? 0,
       'total_full_plays': (row['total_full_plays'] as int?) ?? 0,
+      'traffic_recommend': (row['traffic_recommend'] as double?) ?? 0.0,
+      'traffic_search': (row['traffic_search'] as double?) ?? 0.0,
+      'traffic_follow': (row['traffic_follow'] as double?) ?? 0.0,
+      'traffic_city': (row['traffic_city'] as double?) ?? 0.0,
+    };
+  }
+
+  /// Get average traffic source distribution
+  Future<Map<String, double>> getTrafficSourceAvg() async {
+    final db = await AppDatabase.database;
+    final result = await db.rawQuery('''
+      SELECT 
+        AVG(traffic_recommend) as recommend,
+        AVG(traffic_search) as search,
+        AVG(traffic_follow) as follow,
+        AVG(traffic_city) as city
+      FROM video_metrics
+      WHERE traffic_recommend > 0 OR traffic_search > 0 OR traffic_follow > 0 OR traffic_city > 0
+    ''');
+    if (result.isEmpty) {
+      return {'recommend': 0, 'search': 0, 'follow': 0, 'city': 0};
+    }
+    final row = result.first;
+    return {
+      'recommend': (row['recommend'] as double?) ?? 0,
+      'search': (row['search'] as double?) ?? 0,
+      'follow': (row['follow'] as double?) ?? 0,
+      'city': (row['city'] as double?) ?? 0,
     };
   }
 
