@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import '../security/secure_http_client.dart' as secure;
 import '../security/secure_logger.dart';
 
@@ -157,5 +158,62 @@ class UpdateService {
       return htmlUrl;
     }
     return null;
+  }
+
+  /// 下载更新文件，返回下载文件路径
+  static Future<String> downloadUpdate(
+    String url, {
+    void Function(double progress)? onProgress,
+  }) async {
+    final dir = await getTemporaryDirectory();
+    final fileName = 'douyin_analytics_update.dmg';
+    final file = File('${dir.path}/$fileName');
+
+    final client = HttpClient();
+    try {
+      final request = await client.getUrl(Uri.parse(url));
+      final response = await request.close();
+
+      if (response.statusCode != 200) {
+        throw Exception('下载失败: HTTP ${response.statusCode}');
+      }
+
+      final totalBytes = response.contentLength;
+      final sink = file.openWrite();
+      int received = 0;
+
+      await for (final chunk in response) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (totalBytes > 0 && onProgress != null) {
+          onProgress(received / totalBytes);
+        }
+      }
+
+      await sink.close();
+      SecureLogger.instance.info(
+        '更新文件下载完成: $fileName (${(received / 1024 / 1024).toStringAsFixed(1)} MB)',
+        event: SecurityEventType.updateDownloaded,
+      );
+
+      return file.path;
+    } catch (e) {
+      // 清理下载失败的文件
+      if (await file.exists()) {
+        await file.delete();
+      }
+      rethrow;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// 打开下载的安装包
+  static Future<void> openInstaller(String filePath) async {
+    if (Platform.isMacOS) {
+      await Process.run('open', [filePath]);
+    } else {
+      throw UnsupportedError('当前平台不支持自动安装');
+    }
   }
 }

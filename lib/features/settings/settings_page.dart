@@ -896,6 +896,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showUpdateDialog(AppVersion version) {
+    final isDownloadable = version.downloadUrl != null &&
+        version.downloadUrl!.endsWith('.dmg');
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -917,14 +920,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               const Text('更新内容:', style: TextStyle(fontWeight: FontWeight.w500)),
               const SizedBox(height: 6),
               Container(
+                constraints: const BoxConstraints(maxHeight: 200),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
-                  version.releaseNotes!,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.5),
+                child: SingleChildScrollView(
+                  child: Text(
+                    version.releaseNotes!,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.5),
+                  ),
                 ),
               ),
             ],
@@ -935,20 +941,122 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('稍后再说'),
           ),
-          FilledButton(
-            onPressed: () async {
-              final url = version.downloadUrl ??
-                  'https://github.com/6Gzhang/-/releases/latest';
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url));
-              }
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('前往下载'),
-          ),
+          if (isDownloadable)
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _downloadAndInstall(version);
+              },
+              child: const Text('立即更新'),
+            )
+          else
+            FilledButton(
+              onPressed: () async {
+                final url = version.downloadUrl ??
+                    'https://github.com/6Gzhang/-/releases/latest';
+                if (await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(Uri.parse(url));
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: const Text('前往下载'),
+            ),
         ],
       ),
     );
+  }
+
+  Future<void> _downloadAndInstall(AppVersion version) async {
+    double progress = 0;
+    String? error;
+    bool done = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            if (!done && error == null) {
+              // 启动下载
+              _startDownload(version, (p) {
+                setDialogState(() => progress = p);
+              }, (e) {
+                setDialogState(() => error = e.toString());
+              }, () {
+                setDialogState(() => done = true);
+              });
+            }
+
+            if (error != null) {
+              return AlertDialog(
+                title: const Text('下载失败'),
+                content: Text(error!),
+                actions: [
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('确定'),
+                  ),
+                ],
+              );
+            }
+
+            if (done) {
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: AppTheme.accentGreen, size: 22),
+                    const SizedBox(width: 8),
+                    const Text('下载完成'),
+                  ],
+                ),
+                content: const Text('安装包已下载，请在打开的窗口中拖拽应用到 Applications 文件夹即可完成安装。'),
+                actions: [
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('知道了'),
+                  ),
+                ],
+              );
+            }
+
+            return AlertDialog(
+              title: const Text('正在下载更新...'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LinearProgressIndicator(value: progress),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _startDownload(
+    AppVersion version,
+    void Function(double) onProgress,
+    void Function(String) onError,
+    void Function() onDone,
+  ) async {
+    try {
+      final url = version.downloadUrl!;
+      final filePath = await UpdateService.downloadUpdate(
+        url,
+        onProgress: onProgress,
+      );
+      await UpdateService.openInstaller(filePath);
+      onDone();
+    } catch (e) {
+      onError(e.toString());
+    }
   }
 
   Widget _buildDangerCard() {
