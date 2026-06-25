@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据看板 - 科技风展示</title>
+    <style id="theme-vars">
+/* ============================================
+   Tech Showcase — Brand Design Tokens
+   Dark cyberpunk tech style with glassmorphism
+   ============================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #00d4ff;
+  --color-primary-light: #33ddff;
+  --color-primary-dark: #0099cc;
+  --color-primary-50: rgba(0, 212, 255, 0.08);
+  --color-primary-100: rgba(0, 212, 255, 0.15);
+  --color-primary-200: rgba(0, 212, 255, 0.25);
+  --color-primary-500: rgba(0, 212, 255, 0.5);
+  --color-primary-700: rgba(0, 212, 255, 0.7);
+
+  /* ── Backgrounds ── */
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+  --color-bg-overlay: rgba(15, 21, 32, 0.85);
+
+  /* ── Foreground ── */
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8892a4;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #0a0e17;
+
+  /* ── Borders ── */
+  --color-border: rgba(0, 212, 255, 0.12);
+  --color-border-strong: rgba(0, 212, 255, 0.25);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── State Colors ── */
+  --state-success: #00e68a;
+  --state-warning: #ffaa00;
+  --state-error: #ff4466;
+  --state-info: #00d4ff;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(15, 21, 32, 0.6);
+  --glass-bg-hover: rgba(15, 21, 32, 0.75);
+  --glass-border: rgba(0, 212, 255, 0.15);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+
+  /* ── Glow Effects ── */
+  --glow-primary: 0 0 20px rgba(0, 212, 255, 0.15);
+  --glow-primary-strong: 0 0 40px rgba(0, 212, 255, 0.25);
+  --glow-accent: 0 0 20px rgba(0, 230, 138, 0.15);
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.1);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ── Dark Mode (already dark by default) ── */
+html.dark {
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-bg-base); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased" style="font-family: var(--font-body); background: var(--color-bg-base);">
+
+    <!-- ════════════════════════════════════════════
+         Fixed Top Navigation
+         ════════════════════════════════════════════ -->
+    <nav class="fixed top-0 left-0 right-0 z-50" style="backdrop-filter: blur(var(--glass-blur)); background: rgba(10, 14, 23, 0.8); border-bottom: 1px solid var(--color-border);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between" style="height: 64px;">
+            <!-- Logo -->
+            <a href="index.html" class="flex items-center gap-2 shrink-0" style="font-family: var(--font-display); font-weight: var(--weight-bold); font-size: var(--text-xl); color: var(--color-primary); letter-spacing: var(--tracking-wider);">
+                <i data-lucide="hexagon" style="width: 24px; height: 24px;"></i>
+                NEXUS
+            </a>
+            <!-- Nav Links (center) -->
+            <div class="hidden sm:flex items-center gap-8">
+                <a href="index.html" data-dom-id="nav-index" class="text-sm transition-colors duration-150" style="color: var(--color-text-secondary); font-family: var(--font-body);" onmouseover="this.style.color='var(--color-text-primary)'" onmouseout="this.style.color='var(--color-text-secondary)'">首页</a>
+                <a href="features.html" data-dom-id="nav-features" class="text-sm transition-colors duration-150" style="color: var(--color-text-secondary); font-family: var(--font-body);" onmouseover="this.style.color='var(--color-text-primary)'" onmouseout="this.style.color='var(--color-text-secondary)'">核心能力</a>
+                <a href="dashboard.html" class="text-sm transition-colors duration-150" style="color: var(--color-primary); font-family: var(--font-body); font-weight: var(--weight-medium);">数据看板</a>
+            </div>
+            <!-- CTA -->
+            <a href="#" class="hidden sm:inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold transition-all duration-150" style="background: var(--color-primary); color: var(--color-text-inverse); border-radius: var(--radius-md); font-family: var(--font-body);" onmouseover="this.style.background='var(--color-primary-light)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='var(--color-primary)'; this.style.transform='translateY(0)'">
+                免费试用
+            </a>
+            <!-- Mobile menu button -->
+            <button class="sm:hidden p-2" style="color: var(--color-text-secondary);" aria-label="菜单">
+                <i data-lucide="menu" style="width: 20px; height: 20px;"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="pt-16">
+
+        <!-- ════════════════════════════════════════════
+             Dashboard Header Bar
+             ════════════════════════════════════════════ -->
+        <section class="px-4 sm:px-6 lg:px-8 py-4" style="background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border);">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-lg sm:text-xl font-semibold truncate" style="font-family: var(--font-display); color: var(--color-text-primary);">数据监控中心</h1>
+                    <div class="flex items-center gap-2 px-3 py-1 shrink-0" style="background: rgba(0, 230, 138, 0.1); border-radius: var(--radius-full);">
+                        <span class="block w-2 h-2 rounded-full" style="background: var(--state-success); box-shadow: 0 0 6px rgba(0, 230, 138, 0.5);"></span>
+                        <span class="text-xs whitespace-nowrap" style="font-family: var(--font-body); color: var(--state-success);">系统正常运行</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">最后更新: 3秒前</span>
+                    <button class="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium transition-colors duration-150" style="border: 1px solid var(--color-border-strong); color: var(--color-text-secondary); border-radius: var(--radius-md); background: transparent; font-family: var(--font-body);" onmouseover="this.style.borderColor='var(--color-primary)'; this.style.color='var(--color-primary)'" onmouseout="this.style.borderColor='var(--color-border-strong)'; this.style.color='var(--color-text-secondary)'">
+                        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+                        导出报告
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             KPI Cards Row
+             ════════════════════════════════════════════ -->
+        <section class="px-4 sm:px-6 lg:px-8 py-6">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <!-- KPI 1: 总请求量 -->
+                <div class="kpi-card relative overflow-hidden p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); border-top: 2px solid var(--color-primary);">
+                    <div class="kpi-card-glow absolute inset-0 pointer-events-none"></div>
+                    <p class="text-xs font-medium mb-2 relative z-10" style="font-family: var(--font-body); color: var(--color-text-secondary);">总请求量</p>
+                    <p class="text-2xl sm:text-3xl font-bold mb-1 whitespace-nowrap relative z-10" style="font-family: var(--font-mono); color: var(--color-text-primary); font-variant-numeric: tabular-nums;">12,847,293</p>
+                    <span class="inline-flex items-center gap-1 text-xs font-medium relative z-10" style="font-family: var(--font-mono); color: var(--state-success);">
+                        <i data-lucide="trending-up" style="width: 12px; height: 12px;"></i>
+                        +12.5%
+                    </span>
+                </div>
+
+                <!-- KPI 2: 活跃用户 -->
+                <div class="kpi-card relative overflow-hidden p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); border-top: 2px solid var(--color-primary);">
+                    <div class="kpi-card-glow absolute inset-0 pointer-events-none"></div>
+                    <p class="text-xs font-medium mb-2 relative z-10" style="font-family: var(--font-body); color: var(--color-text-secondary);">活跃用户</p>
+                    <p class="text-2xl sm:text-3xl font-bold mb-1 whitespace-nowrap relative z-10" style="font-family: var(--font-mono); color: var(--color-text-primary); font-variant-numeric: tabular-nums;">45,892</p>
+                    <span class="inline-flex items-center gap-1 text-xs font-medium relative z-10" style="font-family: var(--font-mono); color: var(--state-success);">
+                        <i data-lucide="trending-up" style="width: 12px; height: 12px;"></i>
+                        +8.3%
+                    </span>
+                </div>
+
+                <!-- KPI 3: 平均延迟 -->
+                <div class="kpi-card relative overflow-hidden p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); border-top: 2px solid var(--color-primary);">
+                    <div class="kpi-card-glow absolute inset-0 pointer-events-none"></div>
+                    <p class="text-xs font-medium mb-2 relative z-10" style="font-family: var(--font-body); color: var(--color-text-secondary);">平均延迟</p>
+                    <p class="text-2xl sm:text-3xl font-bold mb-1 whitespace-nowrap relative z-10" style="font-family: var(--font-mono); color: var(--color-text-primary); font-variant-numeric: tabular-nums;">23ms</p>
+                    <span class="inline-flex items-center gap-1 text-xs font-medium relative z-10" style="font-family: var(--font-mono); color: var(--state-success);">
+                        <i data-lucide="trending-down" style="width: 12px; height: 12px;"></i>
+                        -15.2%
+                    </span>
+                </div>
+
+                <!-- KPI 4: 错误率 -->
+                <div class="kpi-card relative overflow-hidden p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); border-top: 2px solid var(--color-primary);">
+                    <div class="kpi-card-glow absolute inset-0 pointer-events-none"></div>
+                    <p class="text-xs font-medium mb-2 relative z-10" style="font-family: var(--font-body); color: var(--color-text-secondary);">错误率</p>
+                    <p class="text-2xl sm:text-3xl font-bold mb-1 whitespace-nowrap relative z-10" style="font-family: var(--font-mono); color: var(--color-text-primary); font-variant-numeric: tabular-nums;">0.03%</p>
+                    <span class="inline-flex items-center gap-1 text-xs font-medium relative z-10" style="font-family: var(--font-mono); color: var(--state-success);">
+                        <i data-lucide="trending-down" style="width: 12px; height: 12px;"></i>
+                        -2.1%
+                    </span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             Charts Area (2-column)
+             ════════════════════════════════════════════ -->
+        <section class="px-4 sm:px-6 lg:px-8 pb-6">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+                <!-- Left: Area Chart — 请求趋势 -->
+                <div class="lg:col-span-3 p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
+                    <h2 class="text-sm font-semibold mb-4" style="font-family: var(--font-display); color: var(--color-text-primary);">请求趋势</h2>
+                    <div class="relative" style="height: 240px;">
+                        <!-- Y-axis labels -->
+                        <div class="absolute left-0 top-0 bottom-6 flex flex-col justify-between z-10" style="width: 40px;">
+                            <span class="text-xs text-right pr-2" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">500k</span>
+                            <span class="text-xs text-right pr-2" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">375k</span>
+                            <span class="text-xs text-right pr-2" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">250k</span>
+                            <span class="text-xs text-right pr-2" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">125k</span>
+                            <span class="text-xs text-right pr-2" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">0</span>
+                        </div>
+                        <!-- Chart area -->
+                        <div class="absolute top-0 bottom-6 right-0" style="left: 44px;">
+                            <!-- Grid lines -->
+                            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                                <div style="border-bottom: 1px solid var(--color-border-subtle);"></div>
+                                <div style="border-bottom: 1px solid var(--color-border-subtle);"></div>
+                                <div style="border-bottom: 1px solid var(--color-border-subtle);"></div>
+                                <div style="border-bottom: 1px solid var(--color-border-subtle);"></div>
+                                <div style="border-bottom: 1px solid var(--color-border-subtle);"></div>
+                            </div>
+                            <!-- Area chart curve (CSS-only) -->
+                            <div class="absolute inset-0 overflow-hidden">
+                                <div class="absolute bottom-0 left-0 right-0" style="height: 85%; background: linear-gradient(to top, rgba(0, 212, 255, 0.15), transparent); border-radius: 50% 50% 0 0 / 30% 30% 0 0;"></div>
+                                <div class="absolute bottom-0 left-0 right-0" style="height: 70%; background: linear-gradient(to top, rgba(0, 212, 255, 0.1), transparent); border-radius: 45% 55% 0 0 / 35% 25% 0 0;"></div>
+                                <div class="absolute bottom-0 left-0 right-0" style="height: 55%; background: linear-gradient(to top, rgba(0, 212, 255, 0.08), transparent); border-radius: 55% 45% 0 0 / 25% 35% 0 0;"></div>
+                                <!-- Curve line -->
+                                <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                                    <defs>
+                                        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="rgba(0, 212, 255, 0.3)"/>
+                                            <stop offset="100%" stop-color="rgba(0, 212, 255, 0)"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M0,80 C10,75 15,60 25,55 C35,50 40,65 50,40 C60,15 65,25 75,30 C85,35 90,20 100,25 L100,100 L0,100 Z" fill="url(#areaGrad)"/>
+                                    <path d="M0,80 C10,75 15,60 25,55 C35,50 40,65 50,40 C60,15 65,25 75,30 C85,35 90,20 100,25" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round"/>
+                                    <!-- Data point dots -->
+                                    <circle cx="25" cy="55" r="3" fill="var(--color-primary)" opacity="0.8"/>
+                                    <circle cx="50" cy="40" r="3" fill="var(--color-primary)" opacity="0.8"/>
+                                    <circle cx="75" cy="30" r="3" fill="var(--color-primary)" opacity="0.8"/>
+                                </svg>
+                            </div>
+                            <!-- X-axis labels -->
+                            <div class="absolute bottom-0 left-0 right-0 flex justify-between pt-1">
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">00:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">04:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">08:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">12:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">16:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">20:00</span>
+                                <span class="text-xs" style="font-family: var(--font-mono); color: var(--color-text-tertiary);">24:00</span>
+                            </div>
+                            <!-- Axis label -->
+                            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2">
+                                <span class="text-xs" style="font-family: var(--font-body); color: var(--color-text-tertiary);">时间</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Donut Chart — 资源分布 -->
+                <div class="lg:col-span-2 p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
+                    <h2 class="text-sm font-semibold mb-4" style="font-family: var(--font-display); color: var(--color-text-primary);">资源分布</h2>
+                    <div class="flex flex-col items-center gap-4">
+                        <!-- CSS-only donut chart -->
+                        <div class="relative" style="width: 180px; height: 180px;">
+                            <div class="absolute inset-0 rounded-full" style="background: conic-gradient(
+                                var(--color-primary) 0deg 126deg,
+                                var(--color-primary-dark) 126deg 226.8deg,
+                                rgba(0, 212, 255, 0.4) 226.8deg 306deg,
+                                rgba(0, 212, 255, 0.2) 306deg 360deg
+                            ); box-shadow: var(--glow-primary);"></div>
+                            <!-- Center hole -->
+                            <div class="absolute inset-0 flex items-center justify-center" style="width: 110px; height: 110px; margin: auto; border-radius: 50%; background: var(--color-bg-surface);">
+                                <div class="text-center">
+                                    <p class="text-lg font-bold" style="font-family: var(--font-mono); color: var(--color-text-primary);">100%</p>
+                                    <p class="text-xs" style="font-family: var(--font-body); color: var(--color-text-tertiary);">总资源</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Legend -->
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-2 w-full">
+                            <div class="flex items-center gap-2">
+                                <span class="block w-2.5 h-2.5 rounded-sm shrink-0" style="background: var(--color-primary);"></span>
+                                <span class="text-xs" style="font-family: var(--font-body); color: var(--color-text-secondary);">CPU</span>
+                                <span class="text-xs ml-auto font-medium" style="font-family: var(--font-mono); color: var(--color-text-primary);">35%</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-2.5 h-2.5 rounded-sm shrink-0" style="background: var(--color-primary-dark);"></span>
+                                <span class="text-xs" style="font-family: var(--font-body); color: var(--color-text-secondary);">内存</span>
+                                <span class="text-xs ml-auto font-medium" style="font-family: var(--font-mono); color: var(--color-text-primary);">28%</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-2.5 h-2.5 rounded-sm shrink-0" style="background: rgba(0, 212, 255, 0.4);"></span>
+                                <span class="text-xs" style="font-family: var(--font-body); color: var(--color-text-secondary);">网络</span>
+                                <span class="text-xs ml-auto font-medium" style="font-family: var(--font-mono); color: var(--color-text-primary);">22%</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="block w-2.5 h-2.5 rounded-sm shrink-0" style="background: rgba(0, 212, 255, 0.2);"></span>
+                                <span class="text-xs" style="font-family: var(--font-body); color: var(--color-text-secondary);">存储</span>
+                                <span class="text-xs ml-auto font-medium" style="font-family: var(--font-mono); color: var(--color-text-primary);">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             Data Table + Activity Feed
+             ════════════════════════════════════════════ -->
+        <section class="px-4 sm:px-6 lg:px-8 pb-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+                <!-- Left: Data Table -->
+                <div class="lg:col-span-3 overflow-hidden" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
+                    <div class="p-5 pb-3">
+                        <h2 class="text-sm font-semibold" style="font-family: var(--font-display); color: var(--color-text-primary);">服务状态</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left" style="min-width: 500px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--color-border);">
+                                    <th class="px-5 py-3 text-xs font-medium" style="font-family: var(--font-body); color: var(--color-text-tertiary);">服务名称</th>
+                                    <th class="px-5 py-3 text-xs font-medium" style="font-family: var(--font-body); color: var(--color-text-tertiary);">状态</th>
+                                    <th class="px-5 py-3 text-xs font-medium text-right" style="font-family: var(--font-body); color: var(--color-text-tertiary);">请求量</th>
+                                    <th class="px-5 py-3 text-xs font-medium text-right" style="font-family: var(--font-body); color: var(--color-text-tertiary);">延迟</th>
+                                    <th class="px-5 py-3 text-xs font-medium text-right" style="font-family: var(--font-body); color: var(--color-text-tertiary);">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="transition-colors duration-150" style="border-bottom: 1px solid var(--color-border-subtle);" onmouseover="this.style.background='var(--glass-bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <td class="px-5 py-3 text-sm font-medium truncate" style="font-family: var(--font-mono); color: var(--color-text-primary);">api-gateway</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="block w-1.5 h-1.5 rounded-full" style="background: var(--state-success); box-shadow: 0 0 4px rgba(0, 230, 138, 0.4);"></span>
+                                            <span class="text-xs" style="font-family: var(--font-body); color: var(--state-success);">正常</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">4,231,892</td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">18ms</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-xs transition-colors duration-150" style="font-family: var(--font-body); color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'">详情</button>
+                                    </td>
+                                </tr>
+                                <tr class="transition-colors duration-150" style="border-bottom: 1px solid var(--color-border-subtle);" onmouseover="this.style.background='var(--glass-bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <td class="px-5 py-3 text-sm font-medium truncate" style="font-family: var(--font-mono); color: var(--color-text-primary);">auth-service</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="block w-1.5 h-1.5 rounded-full" style="background: var(--state-success); box-shadow: 0 0 4px rgba(0, 230, 138, 0.4);"></span>
+                                            <span class="text-xs" style="font-family: var(--font-body); color: var(--state-success);">正常</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">1,892,451</td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">12ms</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-xs transition-colors duration-150" style="font-family: var(--font-body); color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'">详情</button>
+                                    </td>
+                                </tr>
+                                <tr class="transition-colors duration-150" style="border-bottom: 1px solid var(--color-border-subtle);" onmouseover="this.style.background='var(--glass-bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <td class="px-5 py-3 text-sm font-medium truncate" style="font-family: var(--font-mono); color: var(--color-text-primary);">data-pipeline</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="block w-1.5 h-1.5 rounded-full" style="background: var(--state-success); box-shadow: 0 0 4px rgba(0, 230, 138, 0.4);"></span>
+                                            <span class="text-xs" style="font-family: var(--font-body); color: var(--state-success);">正常</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">3,567,210</td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">34ms</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-xs transition-colors duration-150" style="font-family: var(--font-body); color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'">详情</button>
+                                    </td>
+                                </tr>
+                                <tr class="transition-colors duration-150" style="border-bottom: 1px solid var(--color-border-subtle);" onmouseover="this.style.background='var(--glass-bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <td class="px-5 py-3 text-sm font-medium truncate" style="font-family: var(--font-mono); color: var(--color-text-primary);">ml-engine</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="block w-1.5 h-1.5 rounded-full" style="background: var(--state-success); box-shadow: 0 0 4px rgba(0, 230, 138, 0.4);"></span>
+                                            <span class="text-xs" style="font-family: var(--font-body); color: var(--state-success);">正常</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">2,145,678</td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">45ms</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-xs transition-colors duration-150" style="font-family: var(--font-body); color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'">详情</button>
+                                    </td>
+                                </tr>
+                                <tr class="transition-colors duration-150" onmouseover="this.style.background='var(--glass-bg-hover)'" onmouseout="this.style.background='transparent'">
+                                    <td class="px-5 py-3 text-sm font-medium truncate" style="font-family: var(--font-mono); color: var(--color-text-primary);">cache-layer</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="block w-1.5 h-1.5 rounded-full" style="background: var(--state-success); box-shadow: 0 0 4px rgba(0, 230, 138, 0.4);"></span>
+                                            <span class="text-xs" style="font-family: var(--font-body); color: var(--state-success);">正常</span>
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">1,010,062</td>
+                                    <td class="px-5 py-3 text-sm text-right whitespace-nowrap" style="font-family: var(--font-mono); color: var(--color-text-primary);">5ms</td>
+                                    <td class="px-5 py-3 text-right">
+                                        <button class="text-xs transition-colors duration-150" style="font-family: var(--font-body); color: var(--color-text-tertiary); background: none; border: none; cursor: pointer;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'">详情</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: Activity Feed -->
+                <div class="lg:col-span-2 p-5" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);">
+                    <h2 class="text-sm font-semibold mb-4" style="font-family: var(--font-display); color: var(--color-text-primary);">活动日志</h2>
+                    <div class="flex flex-col gap-0">
+
+                        <div class="activity-entry relative pl-4 pb-4" style="border-left: 2px solid var(--color-primary); margin-left: 2px;">
+                            <span class="block text-xs mb-1" style="font-family: var(--font-mono); color: var(--color-primary);">14:23:01</span>
+                            <p class="text-sm" style="font-family: var(--font-body); color: var(--color-text-secondary); line-height: var(--leading-normal);">api-gateway 响应时间恢复正常</p>
+                        </div>
+
+                        <div class="activity-entry relative pl-4 pb-4" style="border-left: 2px solid rgba(0, 212, 255, 0.4); margin-left: 2px;">
+                            <span class="block text-xs mb-1" style="font-family: var(--font-mono); color: var(--color-primary);">14:22:45</span>
+                            <p class="text-sm" style="font-family: var(--font-body); color: var(--color-text-secondary); line-height: var(--leading-normal);">data-pipeline 处理批次 #8921 完成</p>
+                        </div>
+
+                        <div class="activity-entry relative pl-4 pb-4" style="border-left: 2px solid rgba(0, 212, 255, 0.4); margin-left: 2px;">
+                            <span class="block text-xs mb-1" style="font-family: var(--font-mono); color: var(--color-primary);">14:22:30</span>
+                            <p class="text-sm" style="font-family: var(--font-body); color: var(--color-text-secondary); line-height: var(--leading-normal);">ml-engine 模型 v3.2 部署成功</p>
+                        </div>
+
+                        <div class="activity-entry relative pl-4" style="border-left: 2px solid rgba(255, 170, 0, 0.5); margin-left: 2px;">
+                            <span class="block text-xs mb-1" style="font-family: var(--font-mono); color: var(--state-warning);">14:22:12</span>
+                            <p class="text-sm" style="font-family: var(--font-body); color: var(--color-text-secondary); line-height: var(--leading-normal);">auth-service 检测到异常登录尝试</p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ════════════════════════════════════════════
+         Footer
+         ════════════════════════════════════════════ -->
+    <footer class="px-4 sm:px-6 lg:px-8 py-6" style="background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border-top: 1px solid var(--color-border);">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-xs" style="font-family: var(--font-body); color: var(--color-text-tertiary);">&copy; 2026 NEXUS. All rights reserved.</p>
+            <div class="flex items-center gap-4">
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'" aria-label="GitHub">
+                    <i data-lucide="github" style="width: 16px; height: 16px;"></i>
+                </a>
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'" aria-label="Twitter">
+                    <i data-lucide="twitter" style="width: 16px; height: 16px;"></i>
+                </a>
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-tertiary)'" aria-label="邮件">
+                    <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ════════════════════════════════════════════
+         Custom Styles (body-placed per rules)
+         ════════════════════════════════════════════ -->
+    <style>
+        /* Grid background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.4;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Animated gradient border for KPI cards */
+        @keyframes kpi-border-shift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        .kpi-card {
+            background-size: 200% 200%;
+            animation: kpi-border-shift 8s ease infinite;
+        }
+
+        .kpi-card-glow {
+            background: linear-gradient(
+                135deg,
+                rgba(0, 212, 255, 0.06) 0%,
+                transparent 40%,
+                rgba(0, 212, 255, 0.03) 60%,
+                transparent 100%
+            );
+            background-size: 200% 200%;
+            animation: kpi-border-shift 8s ease infinite;
+        }
+
+        /* Activity entry glow effect */
+        .activity-entry::before {
+            content: '';
+            position: absolute;
+            left: -3px;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: inherit;
+            filter: blur(4px);
+            opacity: 0.5;
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .kpi-card,
+            .kpi-card-glow {
+                animation-duration: 0.01ms;
+            }
+        }
+    </style>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+{
+  "data": [
+    {
+      "id": "page-index",
+      "title": "首页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782370400000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/index.html",
+        "interactions": [
+          {
+            "domId": "nav-features",
+            "targetPageId": "page-features",
+            "transitionLabel": "查看核心能力"
+          },
+          {
+            "domId": "nav-dashboard",
+            "targetPageId": "page-dashboard",
+            "transitionLabel": "查看数据看板"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-features",
+      "title": "核心能力",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782370400000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/features.html",
+        "interactions": [
+          {
+            "domId": "nav-dashboard",
+            "targetPageId": "page-dashboard",
+            "transitionLabel": "查看数据看板"
+          },
+          {
+            "domId": "nav-index",
+            "targetPageId": "page-index",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-dashboard",
+      "title": "数据看板",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782370400000,
+      "canvasData": {
+        "x": 620,
+        "y": 672,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/dashboard.html",
+        "interactions": [
+          {
+            "domId": "nav-features",
+            "targetPageId": "page-features",
+            "transitionLabel": "查看核心能力"
+          },
+          {
+            "domId": "nav-index",
+            "targetPageId": "page-index",
+            "hideEdge": true,
+            "transitionLabel": "返回首页"
+          }
+        ]
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "主视觉背景",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1782370500000,
+      "canvasData": {
+        "x": 0,
+        "y": 1122
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-visual.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "科技风展示页",
+    "designLibrary": null
+  }
+}

@@ -1,0 +1,122 @@
+/* ============================================
+   Tech Showcase — Brand Design Tokens
+   Dark cyberpunk tech style with glassmorphism
+   ============================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #00d4ff;
+  --color-primary-light: #33ddff;
+  --color-primary-dark: #0099cc;
+  --color-primary-50: rgba(0, 212, 255, 0.08);
+  --color-primary-100: rgba(0, 212, 255, 0.15);
+  --color-primary-200: rgba(0, 212, 255, 0.25);
+  --color-primary-500: rgba(0, 212, 255, 0.5);
+  --color-primary-700: rgba(0, 212, 255, 0.7);
+
+  /* ── Backgrounds ── */
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+  --color-bg-overlay: rgba(15, 21, 32, 0.85);
+
+  /* ── Foreground ── */
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8892a4;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #0a0e17;
+
+  /* ── Borders ── */
+  --color-border: rgba(0, 212, 255, 0.12);
+  --color-border-strong: rgba(0, 212, 255, 0.25);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── State Colors ── */
+  --state-success: #00e68a;
+  --state-warning: #ffaa00;
+  --state-error: #ff4466;
+  --state-info: #00d4ff;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(15, 21, 32, 0.6);
+  --glass-bg-hover: rgba(15, 21, 32, 0.75);
+  --glass-border: rgba(0, 212, 255, 0.15);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+
+  /* ── Glow Effects ── */
+  --glow-primary: 0 0 20px rgba(0, 212, 255, 0.15);
+  --glow-primary-strong: 0 0 40px rgba(0, 212, 255, 0.25);
+  --glow-accent: 0 0 20px rgba(0, 230, 138, 0.15);
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.1);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ── Dark Mode (already dark by default) ── */
+html.dark {
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+}

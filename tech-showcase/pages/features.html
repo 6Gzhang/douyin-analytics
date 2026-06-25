@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心能力 - 科技风展示</title>
+    <style id="theme-vars">
+/* ============================================
+   Tech Showcase — Brand Design Tokens
+   Dark cyberpunk tech style with glassmorphism
+   ============================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #00d4ff;
+  --color-primary-light: #33ddff;
+  --color-primary-dark: #0099cc;
+  --color-primary-50: rgba(0, 212, 255, 0.08);
+  --color-primary-100: rgba(0, 212, 255, 0.15);
+  --color-primary-200: rgba(0, 212, 255, 0.25);
+  --color-primary-500: rgba(0, 212, 255, 0.5);
+  --color-primary-700: rgba(0, 212, 255, 0.7);
+
+  /* ── Backgrounds ── */
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+  --color-bg-overlay: rgba(15, 21, 32, 0.85);
+
+  /* ── Foreground ── */
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8892a4;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #0a0e17;
+
+  /* ── Borders ── */
+  --color-border: rgba(0, 212, 255, 0.12);
+  --color-border-strong: rgba(0, 212, 255, 0.25);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── State Colors ── */
+  --state-success: #00e68a;
+  --state-warning: #ffaa00;
+  --state-error: #ff4466;
+  --state-info: #00d4ff;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(15, 21, 32, 0.6);
+  --glass-bg-hover: rgba(15, 21, 32, 0.75);
+  --glass-border: rgba(0, 212, 255, 0.15);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+
+  /* ── Glow Effects ── */
+  --glow-primary: 0 0 20px rgba(0, 212, 255, 0.15);
+  --glow-primary-strong: 0 0 40px rgba(0, 212, 255, 0.25);
+  --glow-accent: 0 0 20px rgba(0, 230, 138, 0.15);
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.1);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ── Dark Mode (already dark by default) ── */
+html.dark {
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-bg-base); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+<!-- Fixed Navigation -->
+<nav class="fixed top-0 left-0 w-full z-50" style="backdrop-filter: blur(var(--glass-blur)); background: rgba(10, 14, 23, 0.8); border-bottom: 1px solid var(--color-border);">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between" style="height: 72px;">
+    <a href="index.html" class="text-xl font-bold tracking-wider" style="color: var(--color-primary); font-family: var(--font-display);">NEXUS</a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="index.html" data-dom-id="nav-index" class="text-sm font-medium transition-colors duration-150 hover:text-[var(--color-primary)]" style="color: var(--color-text-secondary);">首页</a>
+      <a href="features.html" class="text-sm font-medium" style="color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 2px;">核心能力</a>
+      <a href="dashboard.html" data-dom-id="nav-dashboard" class="text-sm font-medium transition-colors duration-150 hover:text-[var(--color-primary)]" style="color: var(--color-text-secondary);">数据看板</a>
+    </div>
+    <a href="#" class="hidden md:inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-all duration-150 hover:opacity-90" style="background: var(--color-primary); color: var(--color-text-inverse);">免费试用</a>
+    <!-- Mobile menu button -->
+    <button class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg" style="color: var(--color-text-primary);" aria-label="菜单">
+      <i data-lucide="menu" style="width:20px;height:20px;"></i>
+    </button>
+  </div>
+</nav>
+
+<main>
+  <!-- Page Header -->
+  <section class="pt-32 pb-16 md:pt-40 md:pb-24 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6" style="color: var(--color-text-primary); font-family: var(--font-display); text-wrap: balance; word-break: keep-all; overflow-wrap: break-word;">
+        核心能力
+      </h1>
+      <div class="w-16 h-0.5 mx-auto mb-6" style="background: var(--color-primary);"></div>
+      <p class="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style="color: var(--color-text-secondary);">
+        构建下一代数据智能平台的技术基石
+      </p>
+    </div>
+  </section>
+
+  <!-- Feature Grid -->
+  <section class="pb-20 md:pb-32 px-6">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Card 1: 实时流处理 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">实时流处理</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">毫秒级延迟的数据流处理引擎，支持每秒百万级事件吞吐</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Card 2: 智能异常检测 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">智能异常检测</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">基于机器学习的自动异常识别，无需人工配置阈值</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Card 3: 多维数据融合 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+            <line x1="12" y1="22" x2="12" y2="15.5"/>
+            <polyline points="22 8.5 12 15.5 2 8.5"/>
+            <polyline points="2 15.5 12 8.5 22 15.5"/>
+            <line x1="12" y1="2" x2="12" y2="8.5"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">多维数据融合</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">跨源异构数据的自动清洗、对齐与融合</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Card 4: 可视化分析 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">可视化分析</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">交互式数据探索面板，拖拽即可生成洞察</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Card 5: 弹性扩缩容 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">弹性扩缩容</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">根据负载自动调整计算资源，零停机时间</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+      <!-- Card 6: 安全合规 -->
+      <div class="feature-card group relative p-6 rounded-xl transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <div class="icon-area mb-5 flex items-center justify-center w-12 h-12 rounded-lg" style="background: var(--color-primary-50);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">安全合规</h3>
+        <p class="text-sm leading-relaxed mb-4 line-clamp-3" style="color: var(--color-text-secondary);">端到端加密与完整的审计日志，满足行业合规要求</p>
+        <a href="#" class="inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150" style="color: var(--color-primary);">
+          了解更多 <span style="transition: transform 150ms ease;" class="group-hover:translate-x-1 inline-block">&rarr;</span>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Spotlight Section -->
+  <section class="pb-20 md:pb-32 px-6">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <!-- Left: Text -->
+      <div>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-6" style="color: var(--color-text-primary); font-family: var(--font-display); text-wrap: balance; word-break: keep-all; overflow-wrap: break-word;">
+          从数据到决策，只需一步
+        </h2>
+        <p class="text-base md:text-lg leading-relaxed mb-6" style="color: var(--color-text-secondary);">
+          NEXUS 平台将复杂的数据管道、实时分析与智能决策无缝串联。无需编写代码，通过可视化界面即可完成从数据接入到洞察输出的全链路操作，让数据真正驱动业务增长。
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background: var(--color-primary-50); border: 1px solid var(--color-border);">
+            <span class="w-2 h-2 rounded-full" style="background: var(--state-success);"></span>
+            <span class="text-sm font-medium" style="color: var(--color-text-primary);">实时响应</span>
+          </div>
+          <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background: var(--color-primary-50); border: 1px solid var(--color-border);">
+            <span class="w-2 h-2 rounded-full" style="background: var(--color-primary);"></span>
+            <span class="text-sm font-medium" style="color: var(--color-text-primary);">零代码配置</span>
+          </div>
+          <div class="flex items-center gap-2 px-4 py-2 rounded-lg" style="background: var(--color-primary-50); border: 1px solid var(--color-border);">
+            <span class="w-2 h-2 rounded-full" style="background: var(--state-warning);"></span>
+            <span class="text-sm font-medium" style="color: var(--color-text-primary);">全链路可观测</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Terminal Mock -->
+      <div class="rounded-xl overflow-hidden" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+        <!-- Terminal header -->
+        <div class="flex items-center gap-2 px-4 py-3" style="background: rgba(10, 14, 23, 0.8); border-bottom: 1px solid var(--color-border);">
+          <span class="w-3 h-3 rounded-full" style="background: var(--state-error);"></span>
+          <span class="w-3 h-3 rounded-full" style="background: var(--state-warning);"></span>
+          <span class="w-3 h-3 rounded-full" style="background: var(--state-success);"></span>
+          <span class="ml-3 text-xs font-medium" style="color: var(--color-text-tertiary); font-family: var(--font-mono);">nexus-terminal v3.2.1</span>
+        </div>
+        <!-- Terminal body -->
+        <div class="p-5 font-mono text-xs md:text-sm leading-relaxed" style="color: var(--state-success); font-family: var(--font-mono); min-height: 280px;">
+          <div style="color: var(--color-text-tertiary);">$ nexus pipeline start --mode realtime</div>
+          <div class="mt-2"><span style="color: var(--color-primary);">[INIT]</span> Initializing stream processor...</div>
+          <div><span style="color: var(--color-primary);">[INIT]</span> Connecting to 12 data sources... <span style="color: var(--state-success);">OK</span></div>
+          <div class="mt-2"><span style="color: var(--state-success);">[RUN ]</span> Processing <span style="color: var(--color-text-primary);">1,247,893</span> events/s... <span style="color: var(--state-success);">OK</span></div>
+          <div><span style="color: var(--state-success);">[RUN ]</span> Latency: <span style="color: var(--color-text-primary);">0.8ms</span> p99</div>
+          <div class="mt-2"><span style="color: var(--state-warning);">[ALERT]</span> Anomaly detected in cluster-7... alerting</div>
+          <div><span style="color: var(--state-warning);">[ALERT]</span> Deviation: <span style="color: var(--state-error);">+342%</span> from baseline</div>
+          <div class="mt-2"><span style="color: var(--color-primary);">[FUSE]</span> Merging 8 data streams... aligned</div>
+          <div><span style="color: var(--color-primary);">[FUSE]</span> Quality score: <span style="color: var(--color-text-primary);">99.7%</span></div>
+          <div class="mt-2"><span style="color: var(--state-success);">[DONE]</span> Decision ready: <span style="color: var(--color-text-primary);">optimize_cluster_7</span></div>
+          <div class="mt-3 flex items-center gap-1">
+            <span style="color: var(--color-text-tertiary);">$</span>
+            <span class="inline-block w-2 h-4" style="background: var(--color-primary); animation: blink 1s step-end infinite;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="pb-20 md:pb-32 px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight mb-4" style="color: var(--color-text-primary); font-family: var(--font-display); text-wrap: balance; word-break: keep-all; overflow-wrap: break-word;">
+        立即体验全部能力
+      </h2>
+      <p class="text-base mb-8" style="color: var(--color-text-secondary);">
+        注册即可获得 14 天免费试用，无需绑定信用卡
+      </p>
+      <a href="#" class="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg whitespace-nowrap transition-all duration-150 hover:opacity-90" style="background: var(--color-primary); color: var(--color-text-inverse); box-shadow: var(--glow-primary-strong);">
+        开始免费试用
+      </a>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="px-6 py-10" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border-top: 1px solid var(--color-border);">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <span class="text-sm" style="color: var(--color-text-tertiary);">&copy; 2026 NEXUS. All rights reserved.</span>
+    <div class="flex items-center gap-6">
+      <a href="#" class="text-sm transition-colors duration-150 hover:text-[var(--color-primary)]" style="color: var(--color-text-tertiary);">GitHub</a>
+      <a href="#" class="text-sm transition-colors duration-150 hover:text-[var(--color-primary)]" style="color: var(--color-text-tertiary);">Twitter</a>
+      <a href="#" class="text-sm transition-colors duration-150 hover:text-[var(--color-primary)]" style="color: var(--color-text-tertiary);">Discord</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Custom Styles (body-placed per rules) -->
+<style>
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .feature-card:hover {
+    box-shadow: var(--glow-primary);
+    border-color: var(--color-border-strong);
+    background: var(--glass-bg-hover);
+  }
+
+  .feature-card .icon-area svg {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  /* Grid background pattern */
+  body {
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feature-card .icon-area svg {
+      animation: none;
+    }
+    .feature-card:hover {
+      transition: none;
+    }
+  }
+</style>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

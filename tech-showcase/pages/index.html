@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 科技风展示</title>
+    <style id="theme-vars">
+/* ============================================
+   Tech Showcase — Brand Design Tokens
+   Dark cyberpunk tech style with glassmorphism
+   ============================================ */
+
+:root {
+  /* ── Brand Colors ── */
+  --color-primary: #00d4ff;
+  --color-primary-light: #33ddff;
+  --color-primary-dark: #0099cc;
+  --color-primary-50: rgba(0, 212, 255, 0.08);
+  --color-primary-100: rgba(0, 212, 255, 0.15);
+  --color-primary-200: rgba(0, 212, 255, 0.25);
+  --color-primary-500: rgba(0, 212, 255, 0.5);
+  --color-primary-700: rgba(0, 212, 255, 0.7);
+
+  /* ── Backgrounds ── */
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+  --color-bg-overlay: rgba(15, 21, 32, 0.85);
+
+  /* ── Foreground ── */
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8892a4;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #0a0e17;
+
+  /* ── Borders ── */
+  --color-border: rgba(0, 212, 255, 0.12);
+  --color-border-strong: rgba(0, 212, 255, 0.25);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* ── State Colors ── */
+  --state-success: #00e68a;
+  --state-warning: #ffaa00;
+  --state-error: #ff4466;
+  --state-info: #00d4ff;
+
+  /* ── Glassmorphism ── */
+  --glass-bg: rgba(15, 21, 32, 0.6);
+  --glass-bg-hover: rgba(15, 21, 32, 0.75);
+  --glass-border: rgba(0, 212, 255, 0.15);
+  --glass-blur: 20px;
+  --glass-blur-strong: 40px;
+
+  /* ── Glow Effects ── */
+  --glow-primary: 0 0 20px rgba(0, 212, 255, 0.15);
+  --glow-primary-strong: 0 0 40px rgba(0, 212, 255, 0.25);
+  --glow-accent: 0 0 20px rgba(0, 230, 138, 0.15);
+
+  /* ── Typography ── */
+  --font-display: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-wider: 0.1em;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(0, 212, 255, 0.1);
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+/* ── Dark Mode (already dark by default) ── */
+html.dark {
+  --color-bg-base: #0a0e17;
+  --color-bg-surface: #0f1520;
+  --color-bg-elevated: #141c2b;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-border: var(--color-border);
+  }
+  @layer base {
+    body { background: var(--color-bg-base); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+
+    <!-- Fixed Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+            <a href="#" class="text-xl font-bold tracking-wider whitespace-nowrap" style="color: var(--color-primary); font-family: var(--font-display);">NEXUS</a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#" class="text-sm font-medium whitespace-nowrap" style="color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 2px;">首页</a>
+                <a href="#" data-dom-id="nav-features" class="text-sm font-medium whitespace-nowrap transition-colors duration-150 hover:opacity-100" style="color: var(--color-text-secondary);">核心能力</a>
+                <a href="#" data-dom-id="nav-dashboard" class="text-sm font-medium whitespace-nowrap transition-colors duration-150 hover:opacity-100" style="color: var(--color-text-secondary);">数据看板</a>
+            </div>
+            <a href="#" class="hidden sm:inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-all duration-150" style="background: var(--color-primary); color: var(--color-text-inverse); box-shadow: var(--glow-primary);">免费试用</a>
+            <button class="md:hidden p-2 rounded-lg" style="color: var(--color-text-secondary);" aria-label="菜单">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+
+        <!-- Hero Section -->
+        <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+            <!-- Background Image -->
+            <div class="absolute inset-0">
+                <img src="../assets/hero-visual.jpg" alt="" class="w-full h-full object-cover" loading="eager">
+                <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(10,14,23,0.7) 0%, rgba(10,14,23,0.85) 50%, var(--color-bg-base) 100%);"></div>
+            </div>
+            <!-- Animated Grid Overlay -->
+            <div class="absolute inset-0 grid-overlay" style="opacity: 0.12;"></div>
+            <!-- Hero Content -->
+            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+                <h1 class="font-bold tracking-tight mb-6" style="font-family: var(--font-display); font-size: clamp(40px, 6vw, 72px); line-height: 1.1; color: var(--color-text-primary); text-wrap: balance; word-break: keep-all; overflow-wrap: break-word;">
+                    重新定义<span style="color: var(--color-primary);">数据智能</span>
+                </h1>
+                <p class="text-lg max-w-2xl mx-auto mb-10 line-clamp-2" style="color: var(--color-text-secondary); font-family: var(--font-body); line-height: 1.6;">
+                    新一代数据智能平台，融合实时分析、智能预测与全链路监控，为企业决策提供精准数据支撑
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="#" class="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg whitespace-nowrap transition-all duration-150" style="background: var(--color-primary); color: var(--color-text-inverse); box-shadow: var(--glow-primary-strong);">
+                        开始体验
+                    </a>
+                    <a href="#" class="inline-flex items-center justify-center px-8 py-3 text-base font-medium rounded-lg whitespace-nowrap transition-all duration-150" style="border: 1px solid var(--color-border-strong); color: var(--color-text-primary); background: transparent;">
+                        了解更多
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Bar -->
+        <section class="relative py-16 md:py-20" style="background: var(--color-bg-surface);">
+            <div class="max-w-6xl mx-auto px-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="flex flex-col items-center justify-center p-6 rounded-lg" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <span class="text-3xl md:text-4xl font-bold whitespace-nowrap" style="color: var(--color-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">10M+</span>
+                        <span class="mt-2 text-sm whitespace-nowrap" style="color: var(--color-text-secondary);">数据处理量</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-6 rounded-lg" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <span class="text-3xl md:text-4xl font-bold whitespace-nowrap" style="color: var(--color-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">99.9%</span>
+                        <span class="mt-2 text-sm whitespace-nowrap" style="color: var(--color-text-secondary);">系统可用性</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-6 rounded-lg" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <span class="text-3xl md:text-4xl font-bold whitespace-nowrap" style="color: var(--color-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">50ms</span>
+                        <span class="mt-2 text-sm whitespace-nowrap" style="color: var(--color-text-secondary);">平均响应</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-6 rounded-lg" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <span class="text-3xl md:text-4xl font-bold whitespace-nowrap" style="color: var(--color-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">500+</span>
+                        <span class="mt-2 text-sm whitespace-nowrap" style="color: var(--color-text-secondary);">企业客户</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Preview -->
+        <section class="relative py-20 md:py-28" style="background: var(--color-bg-base);">
+            <div class="max-w-6xl mx-auto px-6">
+                <h2 class="text-center text-2xl md:text-3xl font-bold mb-4 tracking-tight" style="color: var(--color-text-primary); font-family: var(--font-display); text-wrap: balance; word-break: keep-all;">核心能力</h2>
+                <p class="text-center text-base max-w-xl mx-auto mb-14 line-clamp-2" style="color: var(--color-text-secondary);">三大核心引擎驱动数据智能，覆盖从采集到决策的完整链路</p>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Feature 1 -->
+                    <div class="group p-6 rounded-lg transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-5" style="background: var(--color-primary-50); color: var(--color-primary);">
+                            <i data-lucide="activity" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">实时数据分析</h3>
+                        <p class="text-sm line-clamp-3" style="color: var(--color-text-secondary); line-height: 1.6;">毫秒级数据流处理引擎，支持多维度实时聚合与可视化，让业务洞察触手可及</p>
+                    </div>
+                    <!-- Feature 2 -->
+                    <div class="group p-6 rounded-lg transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-5" style="background: var(--color-primary-50); color: var(--color-primary);">
+                            <i data-lucide="brain" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">智能预测引擎</h3>
+                        <p class="text-sm line-clamp-3" style="color: var(--color-text-secondary); line-height: 1.6;">基于深度学习的趋势预测模型，自动识别数据模式，提前预警潜在风险与机遇</p>
+                    </div>
+                    <!-- Feature 3 -->
+                    <div class="group p-6 rounded-lg transition-all duration-250" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-5" style="background: var(--color-primary-50); color: var(--color-primary);">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3" style="color: var(--color-text-primary);">全链路监控</h3>
+                        <p class="text-sm line-clamp-3" style="color: var(--color-text-secondary); line-height: 1.6;">端到端可观测性平台，从数据采集到业务输出，全链路追踪保障系统稳定运行</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Band -->
+        <section class="relative py-20 md:py-28 overflow-hidden" style="background: var(--color-bg-surface);">
+            <div class="absolute inset-0" style="background: linear-gradient(135deg, var(--color-bg-surface) 0%, rgba(0,212,255,0.05) 100%);"></div>
+            <div class="relative z-10 max-w-3xl mx-auto px-6 text-center">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 tracking-tight" style="color: var(--color-text-primary); font-family: var(--font-display); text-wrap: balance; word-break: keep-all;">准备好开始了吗</h2>
+                <p class="text-base max-w-lg mx-auto mb-10 line-clamp-2" style="color: var(--color-text-secondary);">立即体验 NEXUS 数据智能平台，开启数据驱动的新篇章</p>
+                <a href="#" class="inline-flex items-center justify-center px-10 py-3.5 text-base font-semibold rounded-lg whitespace-nowrap transition-all duration-150" style="background: var(--color-primary); color: var(--color-text-inverse); box-shadow: var(--glow-primary-strong);">
+                    免费试用
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative py-10" style="backdrop-filter: blur(var(--glass-blur)); background: var(--glass-bg); border-top: 1px solid var(--glass-border);">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span class="text-sm" style="color: var(--color-text-tertiary);">&copy; 2026 NEXUS. All rights reserved.</span>
+            <div class="flex items-center gap-6">
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" aria-label="GitHub">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                </a>
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" aria-label="Twitter">
+                    <i data-lucide="twitter" class="w-5 h-5"></i>
+                </a>
+                <a href="#" class="transition-colors duration-150" style="color: var(--color-text-tertiary);" aria-label="邮件">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        /* Animated grid overlay for hero */
+        .grid-overlay {
+            background-image:
+                linear-gradient(var(--color-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: grid-move 20s linear infinite;
+            perspective: 600px;
+        }
+        @keyframes grid-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+
+        /* Feature card hover glow */
+        .group:hover {
+            border-color: var(--color-border-strong);
+            box-shadow: var(--glow-primary);
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .grid-overlay { animation-duration: 0.01ms; }
+            .group { transition-duration: 0.01ms; }
+        }
+    </style>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

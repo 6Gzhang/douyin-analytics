@@ -1,0 +1,254 @@
+{
+  "project": {
+    "name": "科技风展示页",
+    "path": "/Users/zhangdongsheng/Desktop/douyin_analytics_source/tech-showcase",
+    "operation": "create",
+    "deviceType": "desktop",
+    "language": "zh-CN",
+    "dashboardMode": false,
+    "replicationMode": null,
+    "sourceUrl": null,
+    "visualSpecExcerpt": null,
+    "styleDefinitionBrief": "暗色赛博科技风：深色背景 + 青蓝光效 + 毛玻璃卡片 + 网格线条，精密数据监控平台感",
+    "designRead": "tech showcase / tech-savvy audience / dark cyberpunk precision / medium density / avoid neon overload",
+    "designDials": {
+      "layoutVariance": 3,
+      "motionIntensity": 3,
+      "visualDensity": 3
+    },
+    "styleContinuityAnchors": {
+      "colorSystem": {
+        "primaryColorRole": "cyan-blue (#00d4ff) for primary CTA, accents, borders, glows",
+        "brandHuePolicy": "single cyan-blue hue; no secondary/accent brand hue",
+        "stateColors": "semantic success/warning/error/info tokens"
+      },
+      "shapeSystem": "restrained radius: sm=4px, md=8px, lg=12px, xl=16px",
+      "typographySystem": "Inter + Noto Sans SC, JetBrains Mono for code/data",
+      "spacingSystem": "8px base grid",
+      "componentLanguage": "glassmorphism cards with backdrop-blur, subtle cyan borders, glow effects on hover",
+      "surfaceAndDepth": "dark layered surfaces with glass panels, border-first depth, glow shadows only on interactive elements",
+      "imageryAndIconography": "tech-themed imagery, grid patterns, data visualization",
+      "interactionTone": "subtle glow transitions, smooth hover lifts"
+    },
+    "specsConstraints": null,
+    "sharedProjectShellContract": {
+      "navigationShell": "fixed top nav with glassmorphism background, logo left, nav links center, CTA right",
+      "primaryColorSystem": "single cyan-blue (#00d4ff) hue for all brand identity",
+      "typographySystem": "Inter + Noto Sans SC for body, JetBrains Mono for data/code",
+      "radiusScale": "sm=4px, md=8px, lg=12px, xl=16px, full=9999px",
+      "surfaceDepthModel": "dark base (#0a0e17) → surface (#0f1520) → elevated (#141c2b), glass panels with backdrop-blur",
+      "ctaStyle": "pill-shaped primary CTA with cyan glow, secondary as ghost button with border",
+      "alignmentRules": "centered content with max-width 1280px, consistent 8px grid"
+    },
+    "generationTree": {
+      "root": {
+        "nodeId": "gen-project-shell",
+        "kind": "project-shell",
+        "pageIds": ["page-index", "page-features", "page-dashboard"],
+        "output": "partials/project-shell.html",
+        "sharedRegions": ["header", "footer"],
+        "privateRegions": [],
+        "mutableSlots": ["activeNavItem", "pageTitle"],
+        "status": "planned",
+        "children": [
+          {
+            "nodeId": "gen-page-index",
+            "kind": "page-leaf",
+            "pageIds": ["page-index"],
+            "output": "pages/index.html",
+            "sharedRegions": [],
+            "privateRegions": ["hero section", "features preview", "stats section", "CTA section"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          },
+          {
+            "nodeId": "gen-page-features",
+            "kind": "page-leaf",
+            "pageIds": ["page-features"],
+            "output": "pages/features.html",
+            "sharedRegions": [],
+            "privateRegions": ["feature grid", "detail sections"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          },
+          {
+            "nodeId": "gen-page-dashboard",
+            "kind": "page-leaf",
+            "pageIds": ["page-dashboard"],
+            "output": "pages/dashboard.html",
+            "sharedRegions": [],
+            "privateRegions": ["dashboard layout", "charts", "data panels"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "designSource": {
+    "operatingMode": "free-explore",
+    "libraryIdentity": null,
+    "libraryPath": null,
+    "cssFilePath": "/Users/zhangdongsheng/Desktop/douyin_analytics_source/tech-showcase/colors_and_type.css",
+    "brandPrefix": "",
+    "themeMode": "dark",
+    "designDecisionSummary": "Dark cyberpunk tech style: deep navy background, cyan-blue (#00d4ff) accent, glassmorphism cards with backdrop-blur, grid patterns, glow effects, Inter + JetBrains Mono typography",
+    "componentContractKind": null,
+    "forbiddenInventedComponents": [],
+    "allowedComponents": [],
+    "styleConstraints": {
+      "radiusMax": 16,
+      "spacingBase": 8,
+      "fontSizeBody": 16,
+      "fontSizeMin": 12,
+      "controlHeightDefault": 40,
+      "controlHeightLarge": 48
+    },
+    "productContext": {
+      "kitType": null,
+      "productType": "tech showcase"
+    },
+    "actualTokenNameReference": [
+      { "semanticPurpose": "Primary accent", "tokenName": "--color-primary" },
+      { "semanticPurpose": "Background base", "tokenName": "--color-bg-base" },
+      { "semanticPurpose": "Glass background", "tokenName": "--glass-bg" },
+      { "semanticPurpose": "Glow effect", "tokenName": "--glow-primary" }
+    ]
+  },
+  "pages": [
+    {
+      "nodeId": "page-index",
+      "slug": "index",
+      "title": "首页",
+      "htmlSrc": "pages/index.html",
+      "pageIndex": 1,
+      "stateGroupId": null,
+      "stateRole": null,
+      "baseStatePageId": null,
+      "sharedShellContract": [],
+      "mutableRegions": [],
+      "derivedFromHtmlSrc": null,
+      "derivationType": "original",
+      "sourcePageId": null,
+      "sourceHtmlSrc": null,
+      "pageType": "showcase",
+      "businessScenario": "科技产品展示首页，展示品牌定位和核心亮点",
+      "visualNorthStar": "震撼的暗色科技首屏，网格背景 + 光效 + 毛玻璃卡片，营造未来数据平台感",
+      "compositionPattern": "hero-full-bleed → feature-preview-grid → stats-counter → cta-band",
+      "continuityAnchors": ["glassmorphism card style", "cyan glow accents", "grid background pattern"],
+      "libraryRestraintMode": false,
+      "uiKitPath": null,
+      "componentPlan": [],
+      "imagePlan": ["hero-visual.jpg"],
+      "chartsRequired": false,
+      "miniProgramStyle": false,
+      "qualityRisks": []
+    },
+    {
+      "nodeId": "page-features",
+      "slug": "features",
+      "title": "核心能力",
+      "htmlSrc": "pages/features.html",
+      "pageIndex": 2,
+      "stateGroupId": null,
+      "stateRole": null,
+      "baseStatePageId": null,
+      "sharedShellContract": [],
+      "mutableRegions": [],
+      "derivedFromHtmlSrc": null,
+      "derivationType": "original",
+      "sourcePageId": null,
+      "sourceHtmlSrc": null,
+      "pageType": "showcase",
+      "businessScenario": "展示产品核心功能和技术能力",
+      "visualNorthStar": "功能卡片网格，每张卡片带有毛玻璃效果和微光边框，hover 时发光",
+      "compositionPattern": "section-header → feature-grid → detail-spotlight → cta",
+      "continuityAnchors": ["glassmorphism card style", "cyan glow accents", "grid background pattern"],
+      "libraryRestraintMode": false,
+      "uiKitPath": null,
+      "componentPlan": [],
+      "imagePlan": [],
+      "chartsRequired": false,
+      "miniProgramStyle": false,
+      "qualityRisks": []
+    },
+    {
+      "nodeId": "page-dashboard",
+      "slug": "dashboard",
+      "title": "数据看板",
+      "htmlSrc": "pages/dashboard.html",
+      "pageIndex": 3,
+      "stateGroupId": null,
+      "stateRole": null,
+      "baseStatePageId": null,
+      "sharedShellContract": [],
+      "mutableRegions": [],
+      "derivedFromHtmlSrc": null,
+      "derivationType": "original",
+      "sourcePageId": null,
+      "sourceHtmlSrc": null,
+      "pageType": "information-dense",
+      "businessScenario": "展示数据监控看板界面",
+      "visualNorthStar": "数据大屏风格，KPI 卡片 + 图表区域 + 实时数据面板，深色背景上的数据可视化",
+      "compositionPattern": "kpi-bar → chart-grid → data-table → status-feed",
+      "continuityAnchors": ["glassmorphism card style", "cyan glow accents", "monospace data typography"],
+      "libraryRestraintMode": false,
+      "uiKitPath": null,
+      "componentPlan": [],
+      "imagePlan": [],
+      "chartsRequired": true,
+      "miniProgramStyle": false,
+      "qualityRisks": []
+    }
+  ],
+  "assets": [
+    {
+      "filename": "hero-visual.jpg",
+      "role": "critical-hero",
+      "owningPage": "index",
+      "semanticDescription": "科技感主视觉，深色背景中的数据网络/光效/粒子",
+      "status": "planned"
+    }
+  ],
+  "wiringPlan": [
+    {
+      "sourceNodeId": "page-index",
+      "domId": "nav-features",
+      "targetPageId": "page-features"
+    },
+    {
+      "sourceNodeId": "page-index",
+      "domId": "nav-dashboard",
+      "targetPageId": "page-dashboard"
+    },
+    {
+      "sourceNodeId": "page-features",
+      "domId": "nav-dashboard",
+      "targetPageId": "page-dashboard"
+    },
+    {
+      "sourceNodeId": "page-dashboard",
+      "domId": "nav-features",
+      "targetPageId": "page-features"
+    }
+  ],
+  "hiddenInteractionPlan": [
+    {
+      "sourceNodeId": "page-features",
+      "domId": "nav-index",
+      "targetPageId": "page-index",
+      "hideEdge": true,
+      "reason": "back to home"
+    },
+    {
+      "sourceNodeId": "page-dashboard",
+      "domId": "nav-index",
+      "targetPageId": "page-index",
+      "hideEdge": true,
+      "reason": "back to home"
+    }
+  ]
+}
