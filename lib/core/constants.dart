@@ -2,7 +2,7 @@
 class AppConstants {
   AppConstants._();
   static const String appName = 'Douyin Analytics';
-  static const String appVersion = '1.4.3';
+  static const String appVersion = '1.4.4';
   static const String appDescription = '抖音数据分析工具';
 
   // 安全配置

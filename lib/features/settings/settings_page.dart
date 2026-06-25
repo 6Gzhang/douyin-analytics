@@ -28,9 +28,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _clearingCache = false;
   bool _importing = false;
   bool _checkingUpdate = false;
-  bool _debugMode = false;
-  String _debugVersion = '';
-  late TextEditingController _debugVersionController;
   String _apiKey = '';
   String _selectedModel = SpKeys.defaultModel;
   int _aiUsageCount = 0;
@@ -42,14 +39,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _debugVersionController = TextEditingController();
     _loadAiConfig();
     _loadVersion();
   }
 
   @override
   void dispose() {
-    _debugVersionController.dispose();
     super.dispose();
   }
 
@@ -73,21 +68,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final version = await UpdateService.getCurrentVersion();
     setState(() {
       _currentVersion = version;
-      _debugVersion = version;
-    });
-  }
-
-  void _toggleDebugMode() {
-    setState(() {
-      _debugMode = !_debugMode;
-      if (!_debugMode) {
-        _debugVersion = _currentVersion;
-        _debugVersionController.text = _currentVersion;
-      } else {
-        // 开启调试模式时,默认设置为比当前版本低的版本号
-        _debugVersion = '1.0.0';
-        _debugVersionController.text = '1.0.0';
-      }
     });
   }
 
@@ -772,49 +752,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            // 调试模式开关
-            Row(
-              children: [
-                Switch(
-                  value: _debugMode,
-                  onChanged: (value) => _toggleDebugMode(),
-                  activeColor: AppTheme.douyinRed,
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('调试模式',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                    Text('模拟旧版本以测试更新推送',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                  ],
-                ),
-              ],
-            ),
-            if (_debugMode) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _debugVersionController,
-                decoration: InputDecoration(
-                  labelText: '测试版本号',
-                  hintText: '例如: 1.0.0',
-                  border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _debugVersion = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '提示: 输入比当前版本低的版本号，点击“检查更新”即可看到更新提示',
-                style: TextStyle(fontSize: 11, color: Colors.orange[700]),
-              ),
-            ],
-            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -831,52 +768,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
                 _checkingUpdate
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 测试按钮 - 模拟旧版本
-                          FilledButton(
-                            onPressed: () async {
-                              setState(() => _checkingUpdate = true);
-                              try {
-                                final latest = await UpdateService.checkForUpdate('1.0.0');
-                                if (!mounted) return;
-                                if (latest != null) {
-                                  _showUpdateDialog(latest);
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('未检测到更新(GitHub上可能没有更高版本)'),
-                                      backgroundColor: AppTheme.accentGreen,
-                                      duration: Duration(seconds: 3),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('测试失败: $e'),
-                                    backgroundColor: AppTheme.douyinRed,
-                                    duration: const Duration(seconds: 3),
-                                  ),
-                                );
-                              } finally {
-                                if (mounted) setState(() => _checkingUpdate = false);
-                              }
-                            },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.douyinRed,
-                            ),
-                            child: const Text('🧪 测试'),
-                          ),
-                          const SizedBox(width: 8),
-                          // 正常检查更新按钮
-                          FilledButton.tonal(
-                            onPressed: _checkUpdate,
-                            child: const Text('检查更新'),
-                          ),
-                        ],
+                    : FilledButton.tonal(
+                        onPressed: _checkUpdate,
+                        child: const Text('检查更新'),
                       ),
               ],
             ),
@@ -894,8 +788,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Future<void> _checkUpdate() async {
     setState(() => _checkingUpdate = true);
     try {
-      final testVersion = _debugMode && _debugVersion.isNotEmpty ? _debugVersion : null;
-      final latest = await UpdateService.checkForUpdate(testVersion);
+      final latest = await UpdateService.checkForUpdate();
       if (!mounted) return;
       if (latest != null) {
         _showUpdateDialog(latest);
@@ -997,6 +890,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     double progress = 0;
     String? error;
     bool done = false;
+    bool started = false;
 
     showDialog(
       context: context,
@@ -1004,8 +898,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
-            if (!done && error == null) {
-              // 启动下载
+            if (!started && !done && error == null) {
+              started = true;
               _startDownload(version, (p) {
                 setDialogState(() => progress = p);
               }, (e) {

@@ -169,10 +169,13 @@ class UpdateService {
     final fileName = 'douyin_analytics_update.dmg';
     final file = File('${dir.path}/$fileName');
 
-    final client = HttpClient();
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 30);
     try {
       final request = await client.getUrl(Uri.parse(url));
-      final response = await request.close();
+      final response = await request.close().timeout(
+        const Duration(seconds: 10),
+      );
 
       if (response.statusCode != 200) {
         throw Exception('下载失败: HTTP ${response.statusCode}');
@@ -182,7 +185,7 @@ class UpdateService {
       final sink = file.openWrite();
       int received = 0;
 
-      await for (final chunk in response) {
+      await for (final chunk in response.timeout(const Duration(seconds: 300))) {
         sink.add(chunk);
         received += chunk.length;
         if (totalBytes > 0 && onProgress != null) {
