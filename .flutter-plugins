@@ -29,3 +29,6 @@ url_launcher_linux=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/url_launcher_
 url_launcher_macos=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/url_launcher_macos-3.2.2/
 url_launcher_web=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/url_launcher_web-2.3.3/
 url_launcher_windows=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/url_launcher_windows-3.1.4/
+webview_flutter=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/webview_flutter-4.8.0/
+webview_flutter_android=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/webview_flutter_android-3.16.8/
+webview_flutter_wkwebview=/Users/zhangdongsheng/.pub-cache/hosted/pub.dev/webview_flutter_wkwebview-3.14.0/

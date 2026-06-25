@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'features/tech_showcase/tech_showcase_page.dart';
 import 'features/dashboard/dashboard_page.dart';
 import 'features/video_list/video_list_page.dart';
 import 'features/video_detail/video_detail_page.dart';
@@ -55,6 +56,7 @@ final goRouter = GoRouter(
     GoRoute(path: '/report/traffic', builder: (_, __) => const TrafficSourcePage()),
     GoRoute(path: '/report/cover', builder: (_, __) => const CoverAnalysisPage()),
     GoRoute(path: '/settings/auto-sync', builder: (_, __) => const AutoSyncSettingsPage()),
+    GoRoute(path: '/tech-showcase', builder: (_, __) => const TechShowcasePage()),
   ],
 );
 

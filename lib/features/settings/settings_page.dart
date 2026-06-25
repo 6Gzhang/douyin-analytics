@@ -124,6 +124,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const SizedBox(height: 8),
           _buildAboutCard(),
           const SizedBox(height: 24),
+          _sectionHeader('开发者'),
+          const SizedBox(height: 8),
+          _buildTechShowcaseTile(),
+          const SizedBox(height: 24),
           _sectionHeader('危险区域'),
           const SizedBox(height: 8),
           _buildDangerCard(),
@@ -709,6 +713,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               child: Text(text,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.4))),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTechShowcaseTile() {
+    return Card(
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF00D4FF).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(Icons.rocket_launch,
+              color: Color(0xFF00D4FF), size: 20),
+        ),
+        title: const Text('技术展示',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        subtitle: Text('科技风 UI 展示页',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () => context.go('/tech-showcase'),
       ),
     );
   }
