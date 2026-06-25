@@ -16,6 +16,7 @@ class BenchmarkReportPage extends ConsumerStatefulWidget {
 class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
   final _db = AppDatabase();
   bool _loading = true;
+  String? _error;
   List<int> _allPlays = [];
 
   @override
@@ -43,7 +44,10 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -57,6 +61,18 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_allPlays.isEmpty) {
       return Center(
         child: Text('暂无播放数据', style: TextStyle(color: Colors.grey[500])),
@@ -65,8 +81,8 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
 
     final n = _allPlays.length;
     final median = n > 0 ? _allPlays[n ~/ 2] : 0;
-    final p25 = n > 0 ? _allPlays[(n * 0.25).round().clamp(0, n - 1)] : 0;
-    final p10 = n > 0 ? _allPlays[(n * 0.10).round().clamp(0, n - 1)] : 0;
+    final p75 = n > 0 ? _allPlays[(n * 0.75).round().clamp(0, n - 1)] : 0;
+    final p90 = n > 0 ? _allPlays[(n * 0.90).round().clamp(0, n - 1)] : 0;
 
     // 播放量分桶
     final buckets = <String, int>{
@@ -96,7 +112,7 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildPercentileCard(median, p25, p10),
+        _buildPercentileCard(median, p75, p90),
         const SizedBox(height: 16),
         _buildDistributionChart(barData, maxCount),
         const SizedBox(height: 16),
@@ -105,7 +121,7 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
     );
   }
 
-  Widget _buildPercentileCard(int median, int p25, int p10) {
+  Widget _buildPercentileCard(int median, int p75, int p90) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -123,12 +139,12 @@ class _BenchmarkReportPageState extends ConsumerState<BenchmarkReportPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _percentileBox('前 25% (P75)', formatCount(p25),
+                  child: _percentileBox('前 25% (P75)', formatCount(p75),
                       const Color(0xFF7C4DFF)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _percentileBox('前 10% (P90)', formatCount(p10),
+                  child: _percentileBox('前 10% (P90)', formatCount(p90),
                       AppTheme.douyinCyan),
                 ),
               ],

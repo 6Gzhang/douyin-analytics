@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../core/constants.dart';
@@ -126,7 +127,7 @@ class DouyinAuthService {
         }
       }
     } catch (e) {
-      print('刷新token失败: $e');
+      debugPrint('刷新token失败: $e');
     }
     return false;
   }

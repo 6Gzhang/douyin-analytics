@@ -15,6 +15,7 @@ class TrendReportPage extends ConsumerStatefulWidget {
 class _TrendReportPageState extends ConsumerState<TrendReportPage> {
   final _db = AppDatabase();
   bool _loading = true;
+  String? _error;
   List<_TrendPoint> _points = [];
 
   // 内容健康度
@@ -99,7 +100,10 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -113,6 +117,18 @@ class _TrendReportPageState extends ConsumerState<TrendReportPage> {
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_points.isEmpty) {
       return Center(
           child: Text('暂无数据', style: TextStyle(color: Colors.grey[500])));

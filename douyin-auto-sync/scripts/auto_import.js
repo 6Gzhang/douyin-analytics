@@ -6,6 +6,18 @@ const fs = require('fs');
 const path = require('path');
 const { execSync, spawn } = require('child_process');
 
+// 检查better-sqlite3模块
+let Database;
+try {
+  Database = require('better-sqlite3');
+} catch (e) {
+  console.log('️  better-sqlite3模块未安装，将只生成JSON文件');
+  console.log('   运行 npm install better-sqlite3 以启用数据库同步\n');
+}
+
+// 数据库连接(稍后初始化)
+let db = null;
+
 const BASE_DIR = path.join(__dirname, '..');
 const DATA_DIR = path.join(BASE_DIR, 'data');
 const DOWNLOAD_DIR = path.join(DATA_DIR, 'downloads');
@@ -240,8 +252,158 @@ function writeDataJson(videos) {
   return outputFile;
 }
 
+// 初始化数据库连接
+function initDatabase() {
+  if (!Database) {
+    console.log('️  better-sqlite3模块未加载，跳过数据库写入');
+    return false;
+  }
+  
+  try {
+    const dbPath = getAppDbPath();
+    const dbDir = path.dirname(dbPath);
+    
+    // 确保目录存在
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    
+    db = new Database(dbPath);
+    db.pragma('journal_mode = WAL'); // 使用WAL模式提高性能
+    console.log(`🗄️  数据库路径: ${dbPath}`);
+    return true;
+  } catch (e) {
+    console.error(`❌ 数据库初始化失败: ${e.message}`);
+    return false;
+  }
+}
+
+// 创建表结构
+function createTables() {
+  // videos表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS videos (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      create_time INTEGER,
+      source TEXT,
+      source_id TEXT,
+      updated_at INTEGER
+    )
+  `);
+  
+  // metrics表
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS metrics (
+      video_id TEXT PRIMARY KEY,
+      play_count INTEGER DEFAULT 0,
+      like_count INTEGER DEFAULT 0,
+      comment_count INTEGER DEFAULT 0,
+      share_count INTEGER DEFAULT 0,
+      collect_count INTEGER DEFAULT 0,
+      finish_rate REAL,
+      avg_watch_duration REAL,
+      two_second_exit_rate REAL,
+      cover_ctr REAL,
+      profile_visits INTEGER DEFAULT 0,
+      full_play_count INTEGER DEFAULT 0,
+      five_second_finish_rate REAL,
+      new_followers INTEGER DEFAULT 0,
+      fetched_at INTEGER,
+      source TEXT,
+      updated_at INTEGER,
+      FOREIGN KEY (video_id) REFERENCES videos(id)
+    )
+  `);
+}
+
+// 写入数据库
+async function writeToDatabase(videos) {
+  if (!db) {
+    console.log('️  数据库未初始化，跳过数据库写入');
+    return { imported: 0, skipped: 0 };
+  }
+  
+  console.log('\n💾 正在写入数据库...');
+  
+  let imported = 0;
+  let skipped = 0;
+  const now = Math.floor(Date.now() / 1000);
+  
+  // 创建表
+  createTables();
+  
+  // 使用事务批量插入
+  const transaction = db.transaction((videos) => {
+    // 预编译语句
+    const stmtVideo = db.prepare(`
+      INSERT OR REPLACE INTO videos (id, title, create_time, source, source_id, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    
+    const stmtMetrics = db.prepare(`
+      INSERT OR REPLACE INTO metrics 
+      (video_id, play_count, like_count, comment_count, share_count, collect_count,
+       finish_rate, avg_watch_duration, two_second_exit_rate, cover_ctr,
+       profile_visits, full_play_count, five_second_finish_rate, new_followers,
+       fetched_at, source, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    
+    try {
+      for (const [index, video] of videos.entries()) {
+        try {
+          const videoId = video.video_id || `csv_${now}_${index}`;
+          const title = video.title || '';
+          const createTime = video.publish_timestamp || now * 1000;
+          
+          // 插入或更新视频
+          stmtVideo.run(
+            videoId, title, createTime, 'csv', 'auto_sync', now
+          );
+          
+          // 插入或更新指标
+          stmtMetrics.run(
+            videoId,
+            video.play_count || 0,
+            video.like_count || 0,
+            video.comment_count || 0,
+            video.share_count || 0,
+            video.collect_count || 0,
+            video.finish_rate || null,
+            video.avg_watch_duration || null,
+            video.two_second_exit_rate || null,
+            video.cover_ctr || null,
+            video.profile_visits || 0,
+            video.full_play_count || 0,
+            video.five_second_finish_rate || null,
+            video.new_fans_count || 0,
+            now,
+            'csv',
+            now
+          );
+          
+          imported++;
+        } catch (e) {
+          console.error(`处理第${index}条数据失败: ${e.message}`);
+          skipped++;
+        }
+      }
+    } catch (e) {
+      console.error(`事务执行失败: ${e.message}`);
+      throw e;
+    }
+  });
+  
+  // 执行事务
+  transaction(videos);
+  
+  console.log(`✅ 数据库写入完成: 成功 ${imported} 条，跳过 ${skipped} 条`);
+  return { imported, skipped };
+}
+
 // 主函数
-function main() {
+async function main() {
   console.log('📥 自动导入抖音数据到应用\n');
 
   // 1. 查找最新的CSV
@@ -270,7 +432,13 @@ function main() {
   // 4. 保存为JSON
   const jsonFile = writeDataJson(videos);
 
-  // 5. 显示统计
+  // 5. 写入数据库
+  let dbResult = { imported: 0, skipped: 0 };
+  if (initDatabase()) {
+    dbResult = await writeToDatabase(videos);
+  }
+
+  // 6. 显示统计
   if (videos.length > 0) {
     const totalPlays = videos.reduce((sum, v) => sum + (v.play_count || 0), 0);
     const totalLikes = videos.reduce((sum, v) => sum + (v.like_count || 0), 0);
@@ -283,6 +451,10 @@ function main() {
   }
 
   console.log('\n🎉 导入完成！');
+  console.log(`💾 JSON文件: ${jsonFile}`);
+  if (dbResult.imported > 0) {
+    console.log(`🗄️  数据库: 成功 ${dbResult.imported} 条，跳过 ${dbResult.skipped} 条`);
+  }
   console.log('💡 打开应用即可看到最新数据');
 
   return jsonFile;

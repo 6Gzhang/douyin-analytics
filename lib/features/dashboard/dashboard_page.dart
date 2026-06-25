@@ -36,6 +36,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   double _avgFinishRate = 0.0;
   double _avgFiveSecFinish = 0.0;
   double _avgCoverCtr = 0.0;
+  double _avgWatchDuration = 0.0;
+  double _avgTwoSecExitRate = 0.0;
 
   // 衍生指标
   double _likeRate = 0.0;
@@ -244,6 +246,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       _avgFinishRate = finishCount > 0 ? totalFinish / finishCount : 0;
       _avgFiveSecFinish = count5s > 0 ? total5s / count5s : 0;
       _avgCoverCtr = coverCount > 0 ? totalCover / coverCount : 0;
+      _avgWatchDuration = watchCount > 0 ? totalWatch / watchCount : 0;
+      _avgTwoSecExitRate = count2s > 0 ? total2s / count2s : 0;
 
       _likeRate = totalPlays > 0 ? totalLikes / totalPlays : 0;
       _commentRate = totalPlays > 0 ? totalComments / totalPlays : 0;
@@ -274,7 +278,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             (b['play_count'] as int? ?? 0).compareTo(a['play_count'] as int? ?? 0));
 
       final sortedByQuality = List<Map<String, dynamic>>.from(videos)
-        ..where((v) => (v['play_count'] as int? ?? 0) > 0)
+        .where((v) => (v['play_count'] as int? ?? 0) > 0)
         .toList()
         ..sort((a, b) {
           final scoreA = _calcVideoScore(a);
@@ -577,6 +581,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       {'label': '互动率', 'value': _pct(_interactionRate), 'icon': Icons.favorite, 'color': Colors.pink},
       {'label': '完播率', 'value': _pct(_avgFinishRate), 'icon': Icons.visibility, 'color': Colors.green},
       {'label': '5秒完播', 'value': _pct(_avgFiveSecFinish), 'icon': Icons.timer, 'color': Colors.orange},
+      {'label': '平均观看', 'value': '${_avgWatchDuration.toStringAsFixed(1)}s', 'icon': Icons.timer_outlined, 'color': Colors.cyan},
+      {'label': '2秒跳出', 'value': _pct(_avgTwoSecExitRate), 'icon': Icons.exit_to_app, 'color': Colors.red},
       {'label': '点赞率', 'value': _pct(_likeRate), 'icon': Icons.thumb_up, 'color': Colors.redAccent},
       {'label': '评论率', 'value': _pct(_commentRate), 'icon': Icons.comment, 'color': Colors.purple},
       {'label': '分享率', 'value': _pct(_shareRate), 'icon': Icons.share, 'color': Colors.teal},

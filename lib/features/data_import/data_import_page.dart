@@ -108,7 +108,7 @@ class _DataImportPageState extends ConsumerState<DataImportPage> {
               final dt = DateTime.tryParse(metric.publishDate);
               if (dt != null) createTime = dt.millisecondsSinceEpoch ~/ 1000;
             } catch (e) {
-              print('解析发布日期失败: ${metric.publishDate}, 错误: $e');
+              debugPrint('解析发布日期失败: ${metric.publishDate}, 错误: $e');
             }
           }
           

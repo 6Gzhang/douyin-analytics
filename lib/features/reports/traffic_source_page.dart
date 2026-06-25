@@ -16,6 +16,7 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
   final _db = AppDatabase();
   bool _loading = true;
   bool _hasData = false;
+  String? _error;
 
   double _recommend = 0;
   double _search = 0;
@@ -72,7 +73,10 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -105,7 +109,18 @@ class _TrafficSourcePageState extends ConsumerState<TrafficSourcePage> {
       appBar: AppBar(title: const Text('流量来源分析')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : !_hasData
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+                      const SizedBox(height: 12),
+                      OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+                    ],
+                  ),
+                )
+              : !_hasData
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),

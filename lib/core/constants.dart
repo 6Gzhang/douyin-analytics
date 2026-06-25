@@ -5,6 +5,13 @@ class AppConstants {
   static const String appVersion = '1.4.0';
   static const String appDescription = '抖音数据分析工具';
 
+  // 安全配置
+  static const int maxFailedLoginAttempts = 5;
+  static const Duration lockoutDuration = Duration(seconds: 30);
+  static const Duration defaultAutoLockTimeout = Duration(minutes: 5);
+  static const int minPinLength = 4;
+  static const int maxPinLength = 8;
+
   // 抖音开放平台配置
   static const String douyinOAuthBaseUrl = 'https://open.douyin.com';
   static const String douyinApiBaseUrl = 'https://open.douyin.com';

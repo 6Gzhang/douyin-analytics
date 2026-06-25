@@ -1,7 +1,7 @@
 name: douyin_analytics
 description: 抖音数据分析工具 - 数码赛道创作者专用
 publish_to: 'none'
-version: 1.2.0
+version: 1.4.0
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -39,6 +39,9 @@ dependencies:
   json_annotation: ^4.9.0
   file_picker: ^8.0.3
   shared_preferences: ^2.3.2
+  crypto: ^3.0.3
+  encrypt: ^5.0.3
+  local_auth: ^2.2.0
   
   # UI
   google_fonts: ^6.2.1

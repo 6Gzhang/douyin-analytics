@@ -51,11 +51,10 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       final metrics = await _db.getMetricsForVideo(widget.videoId);
 
       int myPlays = (metrics?['play_count'] as int?) ?? 0;
-      final allVideos = await _db.getAllVideos();
+      final allVideos = await _db.getAllVideosWithMetrics();
       final allPlays = <int>[];
       for (final v in allVideos) {
-        final m = await _db.getMetricsForVideo(v['id'] as String);
-        if (m != null) allPlays.add((m['play_count'] as int?) ?? 0);
+        allPlays.add((v['play_count'] as int?) ?? 0);
       }
       allPlays.sort();
       int better = 0;

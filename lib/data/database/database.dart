@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import '../../security/security_service.dart';
 
 /// 应用数据库
 class AppDatabase {
@@ -17,7 +18,7 @@ class AppDatabase {
     final path = p.join(dir.path, 'dyanalytics.db');
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE videos (
@@ -96,6 +97,23 @@ class AppDatabase {
             updated_at INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp INTEGER NOT NULL,
+            level TEXT NOT NULL,
+            event_type TEXT,
+            message TEXT NOT NULL,
+            metadata TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE security_config (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -140,6 +158,21 @@ class AppDatabase {
           if (!mcolNames.contains('share_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN share_rate REAL");
           if (!mcolNames.contains('collect_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN collect_rate REAL");
           if (!mcolNames.contains('interaction_rate')) await db.execute("ALTER TABLE video_metrics ADD COLUMN interaction_rate REAL");
+        }
+        if (oldVersion < 6) {
+          await db.execute('''CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp INTEGER NOT NULL,
+            level TEXT NOT NULL,
+            event_type TEXT,
+            message TEXT NOT NULL,
+            metadata TEXT
+          )''');
+          await db.execute('''CREATE TABLE IF NOT EXISTS security_config (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at INTEGER NOT NULL
+          )''');
         }
       },
     );
@@ -579,5 +612,96 @@ class AppDatabase {
       await db.close();
       _db = null;
     }
+  }
+
+  // ========== 安全审计日志 ==========
+
+  Future<int> insertAuditLog({
+    required int timestamp,
+    required String level,
+    String? eventType,
+    required String message,
+    String? metadata,
+  }) async {
+    final db = await AppDatabase.database;
+    return await db.insert('audit_logs', {
+      'timestamp': timestamp,
+      'level': level,
+      'event_type': eventType,
+      'message': message,
+      'metadata': metadata,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getAuditLogs({
+    int limit = 100,
+    String? eventType,
+    String? level,
+  }) async {
+    final db = await AppDatabase.database;
+    var query = 'SELECT * FROM audit_logs WHERE 1=1';
+    final args = <dynamic>[];
+    if (eventType != null) {
+      query += ' AND event_type = ?';
+      args.add(eventType);
+    }
+    if (level != null) {
+      query += ' AND level = ?';
+      args.add(level);
+    }
+    query += ' ORDER BY timestamp DESC LIMIT ?';
+    args.add(limit);
+    return await db.rawQuery(query, args);
+  }
+
+  Future<int> clearAuditLogs({int olderThanDays = 30}) async {
+    final db = await AppDatabase.database;
+    final cutoff = DateTime.now()
+        .subtract(Duration(days: olderThanDays))
+        .millisecondsSinceEpoch;
+    return await db.delete('audit_logs',
+        where: 'timestamp < ?', whereArgs: [cutoff]);
+  }
+
+  // ========== 安全配置 ==========
+
+  Future<String?> getSecurityConfig(String key) async {
+    final db = await AppDatabase.database;
+    final results =
+        await db.query('security_config', where: 'key = ?', whereArgs: [key]);
+    return results.isNotEmpty ? results.first['value'] as String? : null;
+  }
+
+  Future<void> setSecurityConfig(String key, String value) async {
+    final db = await AppDatabase.database;
+    await db.insert(
+      'security_config',
+      {
+        'key': key,
+        'value': value,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deleteSecurityConfig(String key) async {
+    final db = await AppDatabase.database;
+    await db.delete('security_config', where: 'key = ?', whereArgs: [key]);
+  }
+
+  // ========== 敏感字段加密存储 ==========
+
+  /// 加密存储敏感数据（如 API Key 备份）
+  Future<void> setEncryptedConfig(String key, String value) async {
+    final encrypted = await SecurityService.instance.encryptPersistent(value);
+    await setSecurityConfig('encrypted_$key', encrypted);
+  }
+
+  /// 解密读取敏感数据
+  Future<String?> getEncryptedConfig(String key) async {
+    final encrypted = await getSecurityConfig('encrypted_$key');
+    if (encrypted == null) return null;
+    return await SecurityService.instance.decryptPersistent(encrypted);
   }
 }

@@ -18,6 +18,7 @@ class _ContentInsightReportPageState
     extends ConsumerState<ContentInsightReportPage> with SingleTickerProviderStateMixin {
   final _db = AppDatabase();
   bool _loading = true;
+  String? _error;
   late TabController _tabController;
 
   List<Map<String, dynamic>> _allVideos = [];
@@ -120,7 +121,10 @@ class _ContentInsightReportPageState
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -149,6 +153,18 @@ class _ContentInsightReportPageState
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_allVideos.isEmpty) {
       return Center(
           child: Text('暂无数据', style: TextStyle(color: Colors.grey[500])));

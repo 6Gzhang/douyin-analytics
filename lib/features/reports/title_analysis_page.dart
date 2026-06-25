@@ -15,6 +15,7 @@ class TitleAnalysisPage extends ConsumerStatefulWidget {
 class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
   final _db = AppDatabase();
   bool _loading = true;
+  String? _error;
   List<_TitleData> _titles = [];
   List<_KeywordStat> _keywordStats = [];
   List<String> _suggestions = [];
@@ -26,14 +27,16 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final videos = await _db.getAllVideos();
+      final videos = await _db.getAllVideosWithMetrics();
       final titles = <_TitleData>[];
 
       for (final v in videos) {
-        final m = await _db.getMetricsForVideo(v['id'] as String);
-        final plays = (m?['play_count'] as int?) ?? 0;
+        final plays = (v['play_count'] as int?) ?? 0;
         final title = (v['title'] as String?) ?? '';
         if (title.isEmpty) continue;
         titles.add(_TitleData(
@@ -76,15 +79,17 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
   List<String> _extractKeywords(String title) {
     final words = <String>{};
-    // Split by common delimiters
     final segments = title
-        .replaceAll(RegExp(r'[，。！？、；：''（）【】《》\s#@¥…—\-+=\[\]{}|\\/&*]'), '|')
+        .replaceAll(RegExp(r'[，。！？、；：\(\)（）【】《》\s#@¥…—\-+=\[\]{}|\\/&*]'), '|')
         .split('|')
         .where((s) => s.length >= 2)
         .toList();
@@ -131,6 +136,18 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
 
   Widget _buildBody() {
     if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+            const SizedBox(height: 12),
+            OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+          ],
+        ),
+      );
+    }
     if (_titles.isEmpty) {
       return Center(
           child: Text('暂无数据，请先导入视频',
@@ -247,8 +264,9 @@ class _TitleAnalysisPageState extends ConsumerState<TitleAnalysisPage> {
       sumY2 += t.plays * t.plays;
     }
     final n = _titles.length;
-    final r = (n * sumXY - sumX * sumY) /
-        (_sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY)) + 0.001);
+    final denominator = (n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY);
+    if (denominator <= 0) return const SizedBox.shrink();
+    final r = (n * sumXY - sumX * sumY) / _sqrt(denominator);
 
     String interpretation;
     Color rColor;

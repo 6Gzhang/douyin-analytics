@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import '../security/secure_http_client.dart' as secure;
+import '../security/secure_logger.dart';
 
 class AppVersion {
   final String version;
@@ -29,7 +33,7 @@ class AppVersion {
 
   List<int>? _parseVersion(String v) {
     try {
-      final cleaned = v.replaceAll('v', '').split('+').first;
+      final cleaned = v.toLowerCase().replaceAll('v', '').split('+').first;
       final parts = cleaned.split('.').map(int.parse).toList();
       while (parts.length < 3) {
         parts.add(0);
@@ -57,7 +61,7 @@ class UpdateService {
         }
       }
     } catch (e) {
-      print('读取版本号失败: $e');
+      debugPrint('读取版本号失败: $e');
     }
     return '1.1.0';
   }
@@ -65,18 +69,37 @@ class UpdateService {
   static Future<AppVersion?> checkForUpdate([String? currentVersion]) async {
     try {
       final version = currentVersion ?? await getCurrentVersion();
+      debugPrint('检查更新: 当前版本 $version');
+
+      // URL 安全校验
+      if (!secure.SecureHttpClient.isUrlSafe(apiUrl)) {
+        SecureLogger.instance.warning(
+          '更新检查 URL 不安全: $apiUrl',
+          event: SecurityEventType.suspiciousActivity,
+        );
+        return null;
+      }
+
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {'Accept': 'application/vnd.github.v3+json'},
       ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        debugPrint('更新检查失败: HTTP ${response.statusCode}');
+        return null;
+      }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final tagName = data['tag_name'] as String?;
-      if (tagName == null) return null;
+      if (tagName == null) {
+        debugPrint('更新检查失败: tag_name 为空');
+        return null;
+      }
 
-      final latestVersion = tagName.replaceAll('v', '');
+      final latestVersion = tagName.toLowerCase().replaceAll('v', '');
+      debugPrint('更新检查: 最新版本 $latestVersion');
+      
       final appVersion = AppVersion(
         version: latestVersion,
         downloadUrl: _findDownloadUrl(data),
@@ -87,10 +110,24 @@ class UpdateService {
       );
 
       if (appVersion.isNewerThan(version)) {
+        debugPrint('更新检查: 发现新版本 $latestVersion');
+        SecureLogger.instance.info(
+          '发现新版本: $latestVersion',
+          event: SecurityEventType.updateChecked,
+          meta: {'current': version, 'latest': latestVersion},
+        );
         return appVersion;
       }
+      debugPrint('更新检查: 当前已是最新版本');
       return null;
-    } catch (_) {
+    } on http.ClientException catch (e) {
+      debugPrint('更新检查失败: 网络错误 $e');
+      return null;
+    } on TimeoutException catch (_) {
+      debugPrint('更新检查失败: 请求超时');
+      return null;
+    } catch (e) {
+      debugPrint('更新检查失败: $e');
       return null;
     }
   }
@@ -98,16 +135,27 @@ class UpdateService {
   static String? _findDownloadUrl(Map<String, dynamic> data) {
     final assets = data['assets'] as List<dynamic>?;
     if (assets == null || assets.isEmpty) {
-      return data['html_url'] as String?;
+      final htmlUrl = data['html_url'] as String?;
+      if (htmlUrl != null && secure.SecureHttpClient.isUrlSafe(htmlUrl)) {
+        return htmlUrl;
+      }
+      return null;
     }
 
     for (final asset in assets) {
       final name = (asset['name'] as String).toLowerCase();
       if (Platform.isMacOS && (name.contains('.dmg') || name.contains('macos'))) {
-        return asset['browser_download_url'] as String?;
+        final url = asset['browser_download_url'] as String?;
+        if (url != null && secure.SecureHttpClient.isUrlSafe(url)) {
+          return url;
+        }
       }
     }
 
-    return data['html_url'] as String?;
+    final htmlUrl = data['html_url'] as String?;
+    if (htmlUrl != null && secure.SecureHttpClient.isUrlSafe(htmlUrl)) {
+      return htmlUrl;
+    }
+    return null;
   }
 }

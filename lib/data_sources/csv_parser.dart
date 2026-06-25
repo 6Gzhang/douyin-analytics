@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'feishu_service.dart';
 
 /// CSV 解析器 - 解析抖音数据导出格式
@@ -156,7 +157,7 @@ class CsvParser {
       final dt = DateTime.tryParse(val);
       if (dt != null) return dt.millisecondsSinceEpoch;
     } catch (e) {
-      print('解析日期失败: $val, 错误: $e');
+      debugPrint('解析日期失败: $val, 错误: $e');
     }
     return 0;
   }

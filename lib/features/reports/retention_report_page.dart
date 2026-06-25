@@ -18,6 +18,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
   final _db = AppDatabase();
   bool _loading = true;
   bool _hasData = false;
+  String? _error;
 
   final List<double> _finishRates = [];
   double _avgFR = 0;
@@ -59,6 +60,12 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
       int countWithTwo = 0;
       int countWithWatch = 0;
 
+      // 重置累加字段
+      _finishRates.clear();
+      _scatter.clear();
+      _histogram.clear();
+      _recentVideos.clear();
+
       for (final v in videos) {
         final fr = (v['finish_rate'] as double?) ?? 0;
         final plays = (v['play_count'] as int?) ?? 0;
@@ -81,6 +88,7 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
               finishRate: fr,
               playCount: plays,
               fiveSecRate: fsr,
+              twoSecExitRate: twoSec,
             ));
           }
         }
@@ -122,7 +130,10 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -216,7 +227,18 @@ class _RetentionReportPageState extends ConsumerState<RetentionReportPage> {
       appBar: AppBar(title: const Text('留存与完播分析')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : !_hasData
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+                      const SizedBox(height: 12),
+                      OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+                    ],
+                  ),
+                )
+              : !_hasData
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),

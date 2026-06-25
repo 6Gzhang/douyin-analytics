@@ -17,6 +17,7 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
   final _db = AppDatabase();
   bool _loading = true;
   bool _hasData = false;
+  String? _error;
 
   double _avgCtr = 0;
   double _maxCtr = 0;
@@ -40,6 +41,9 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
     setState(() => _loading = true);
     try {
       final videos = await _db.getAllVideosWithMetrics();
+      // 重置累加字段
+      _ctrBuckets.clear();
+
       final withCtr = videos.where((v) {
         final ctr = (v['cover_ctr'] as double?) ?? 0;
         return ctr > 0;
@@ -113,7 +117,10 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -146,7 +153,18 @@ class _CoverAnalysisPageState extends ConsumerState<CoverAnalysisPage> {
       appBar: AppBar(title: const Text('封面分析')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : !_hasData
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('加载失败: $_error', style: TextStyle(color: Colors.grey[600])),
+                      const SizedBox(height: 12),
+                      OutlinedButton(onPressed: _loadData, child: const Text('重试')),
+                    ],
+                  ),
+                )
+              : !_hasData
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),

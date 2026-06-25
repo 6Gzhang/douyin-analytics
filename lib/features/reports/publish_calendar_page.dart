@@ -40,44 +40,55 @@ class _PublishCalendarPageState extends ConsumerState<PublishCalendarPage>
   }
 
   Future<void> _loadData() async {
-    final videos = await _db.getAllVideosWithMetrics();
-    for (final v in videos) {
-      final plays = (v['play_count'] as int?) ?? 0;
-      if (plays <= 0) continue;
-      final ct = v['create_time'] as int?;
-      if (ct == null || ct == 0) continue;
-      final dt = DateTime.fromMillisecondsSinceEpoch(ct * 1000);
-      final wd = dt.weekday; // 1=Mon, 7=Sun
-      final hr = dt.hour;
+    setState(() => _loading = true);
+    try {
+      final videos = await _db.getAllVideosWithMetrics();
+      // 重置累加字段
+      _weekdayPlays.clear();
+      _hourPlays.clear();
+      _comboList.clear();
 
-      _weekdayPlays.putIfAbsent(wd, () => []).add(plays);
-      _hourPlays.putIfAbsent(hr, () => []).add(plays);
-      _comboList.add({'weekday': wd, 'hour': hr, 'plays': plays});
-    }
+      for (final v in videos) {
+        final plays = (v['play_count'] as int?) ?? 0;
+        if (plays <= 0) continue;
+        final ct = v['create_time'] as int?;
+        if (ct == null || ct == 0) continue;
+        final dt = DateTime.fromMillisecondsSinceEpoch(ct * 1000);
+        final wd = dt.weekday; // 1=Mon, 7=Sun
+        final hr = dt.hour;
 
-    // Calculate combo top 10
-    final combos = <String, List<int>>{};
-    for (final c in _comboList) {
-      final key = '${c['weekday']}_${c['hour']}';
-      combos.putIfAbsent(key, () => []).add(c['plays'] as int);
-    }
-    final avgList = <Map<String, dynamic>>[];
-    for (final entry in combos.entries) {
-      final parts = entry.key.split('_');
-      final sum = entry.value.fold<int>(0, (a, b) => a + b);
-      avgList.add({
-        'weekday': int.parse(parts[0]),
-        'hour': int.parse(parts[1]),
-        'count': entry.value.length,
-        'avg_plays': sum / entry.value.length,
-      });
-    }
-    avgList.sort((a, b) => (b['avg_plays'] as double).compareTo(a['avg_plays'] as double));
-    _top10 = avgList.take(10).toList();
+        _weekdayPlays.putIfAbsent(wd, () => []).add(plays);
+        _hourPlays.putIfAbsent(hr, () => []).add(plays);
+        _comboList.add({'weekday': wd, 'hour': hr, 'plays': plays});
+      }
 
-    if (!mounted) return;
-    setState(() => _loading = false);
-    _fetchAiSuggestion();
+      // Calculate combo top 10
+      final combos = <String, List<int>>{};
+      for (final c in _comboList) {
+        final key = '${c['weekday']}_${c['hour']}';
+        combos.putIfAbsent(key, () => []).add(c['plays'] as int);
+      }
+      final avgList = <Map<String, dynamic>>[];
+      for (final entry in combos.entries) {
+        final parts = entry.key.split('_');
+        final sum = entry.value.fold<int>(0, (a, b) => a + b);
+        avgList.add({
+          'weekday': int.parse(parts[0]),
+          'hour': int.parse(parts[1]),
+          'count': entry.value.length,
+          'avg_plays': sum / entry.value.length,
+        });
+      }
+      avgList.sort((a, b) => (b['avg_plays'] as double).compareTo(a['avg_plays'] as double));
+      _top10 = avgList.take(10).toList();
+
+      if (!mounted) return;
+      setState(() => _loading = false);
+      _fetchAiSuggestion();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
   Future<void> _fetchAiSuggestion() async {

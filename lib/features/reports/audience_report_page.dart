@@ -76,6 +76,9 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
       final Map<String, double> regionAgg = {};
       int audienceDataCount = 0;
 
+      // 重置累加字段
+      _finishRateBuckets.updateAll((key, value) => 0);
+
       for (final v in videos) {
         plays += (v['play_count'] as int?) ?? 0;
         likes += (v['like_count'] as int?) ?? 0;
@@ -123,7 +126,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
             });
             audienceDataCount++;
           } catch (e) {
-            print('解析年龄分布失败: $e');
+            debugPrint('解析年龄分布失败: $e');
           }
         }
 
@@ -136,7 +139,7 @@ class _AudienceReportPageState extends ConsumerState<AudienceReportPage> with Si
             });
             audienceDataCount++;
           } catch (e) {
-            print('解析地区分布失败: $e');
+            debugPrint('解析地区分布失败: $e');
           }
         }
       }

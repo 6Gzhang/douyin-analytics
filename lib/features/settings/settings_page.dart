@@ -3,6 +3,7 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,6 +11,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../data/database/database.dart';
 import '../../data_sources/csv_parser.dart';
+import '../../security/security.dart';
 import '../../services/ai_service.dart';
 import '../../services/update_service.dart';
 
@@ -22,6 +24,7 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   final _db = AppDatabase();
+  final _secureStorage = const FlutterSecureStorage();
   bool _clearingCache = false;
   bool _importing = false;
   bool _checkingUpdate = false;
@@ -33,6 +36,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   int _aiUsageCount = 0;
   int _aiEstimatedTokens = 0;
   String _currentVersion = '1.1.0';
+  bool _lockEnabled = false;
+  bool _bioEnabled = false;
 
   @override
   void initState() {
@@ -50,11 +55,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _loadAiConfig() async {
     final sp = await SharedPreferences.getInstance();
+    final apiKey = await _secureStorage.read(key: 'siliconflow_api_key_secure');
+    final model = await _secureStorage.read(key: 'siliconflow_model_secure');
+    await AppLockManager.instance.init();
+    final bio = await AppLockManager.instance.canUseBiometrics();
     setState(() {
-      _apiKey = sp.getString(SpKeys.siliconflowApiKey) ?? '';
-      _selectedModel = sp.getString(SpKeys.siliconflowModel) ?? SpKeys.defaultModel;
+      _apiKey = apiKey ?? '';
+      _selectedModel = model ?? SpKeys.defaultModel;
       _aiUsageCount = sp.getInt(SpKeys.aiUsageCount) ?? 0;
       _aiEstimatedTokens = sp.getInt(SpKeys.aiEstimatedTokens) ?? 0;
+      _lockEnabled = AppLockManager.instance.isLockEnabled;
+      _bioEnabled = AppLockManager.instance.isBioEnabled && bio;
     });
   }
 
@@ -98,6 +109,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _sectionHeader('AI 助手配置'),
           const SizedBox(height: 8),
           _buildAiConfigSection(),
+          const SizedBox(height: 24),
+          _sectionHeader('安全设置'),
+          const SizedBox(height: 8),
+          _buildSecuritySection(),
           const SizedBox(height: 16),
           _buildAutoSyncTile(),
           const SizedBox(height: 24),
@@ -322,23 +337,195 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, ctrl.text), child: const Text('保存')),
+          FilledButton(
+            onPressed: () {
+              final error = InputValidator.apiKey(ctrl.text);
+              if (error != null) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(content: Text(error), backgroundColor: AppTheme.douyinRed),
+                );
+                return;
+              }
+              Navigator.pop(ctx, ctrl.text.trim());
+            },
+            child: const Text('保存'),
+          ),
         ],
       ),
     );
     if (result != null && mounted) {
-      final sp = await SharedPreferences.getInstance();
-      await sp.setString(SpKeys.siliconflowApiKey, result);
+      await _secureStorage.write(key: 'siliconflow_api_key_secure', value: result);
       AiService.instance.updateApiKey(result);
       setState(() => _apiKey = result);
     }
   }
 
   Future<void> _setModel(String model) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.setString(SpKeys.siliconflowModel, model);
+    await _secureStorage.write(key: 'siliconflow_model_secure', value: model);
     AiService.instance.setModel(model);
     setState(() => _selectedModel = model);
+  }
+
+  // ---- 安全设置 ----
+  Widget _buildSecuritySection() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _lockEnabled,
+              title: const Text('应用锁', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('启用 PIN 码锁屏保护数据安全'),
+              secondary: const Icon(Icons.lock_outline),
+              onChanged: (v) async {
+                if (v) {
+                  await _showSetPinDialog();
+                } else {
+                  await AppLockManager.instance.removePin();
+                  setState(() => _lockEnabled = false);
+                }
+              },
+            ),
+            if (_lockEnabled) ...[
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('修改 PIN 码'),
+                leading: const Icon(Icons.edit),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _showSetPinDialog,
+              ),
+              const Divider(),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _bioEnabled,
+                title: const Text('生物识别'),
+                subtitle: const Text('使用指纹或面容快速解锁'),
+                secondary: const Icon(Icons.fingerprint),
+                onChanged: _bioEnabled
+                    ? (v) async {
+                        await AppLockManager.instance.setBioEnabled(v);
+                        setState(() => _bioEnabled = v);
+                      }
+                    : null,
+              ),
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('自动锁屏时间'),
+                subtitle: const Text('5 分钟'),
+                leading: const Icon(Icons.timer),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  // 可扩展为选择时间
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSetPinDialog() async {
+    final pinCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('设置 PIN 码'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: pinCtrl,
+              obscureText: true,
+              maxLength: 8,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'PIN 码（4-8位数字）',
+                hintText: '请输入 PIN 码',
+              ),
+              onChanged: (_) {
+                if (ctx is StatefulElement) {
+                  (ctx as dynamic).markNeedsBuild?.call();
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: confirmCtrl,
+              obscureText: true,
+              maxLength: 8,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '确认 PIN 码',
+                hintText: '请再次输入 PIN 码',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          FilledButton(
+            onPressed: () {
+              final pin = pinCtrl.text.trim();
+              final confirm = confirmCtrl.text.trim();
+              if (pin.length < 4 || pin.length > 8) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('PIN 码必须为 4-8 位数字'),
+                    backgroundColor: AppTheme.douyinRed,
+                  ),
+                );
+                return;
+              }
+              if (!RegExp(r'^\d+$').hasMatch(pin)) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('PIN 码只能包含数字'),
+                    backgroundColor: AppTheme.douyinRed,
+                  ),
+                );
+                return;
+              }
+              if (pin != confirm) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('两次输入的 PIN 码不一致'),
+                    backgroundColor: AppTheme.douyinRed,
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(ctx, pin);
+            },
+            child: const Text('确认'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && mounted) {
+      final success = await AppLockManager.instance.setPin(result);
+      if (success) {
+        final bio = await AppLockManager.instance.canUseBiometrics();
+        setState(() {
+          _lockEnabled = true;
+          _bioEnabled = bio;
+        });
+        if (bio) {
+          await AppLockManager.instance.setBioEnabled(true);
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('PIN 码设置成功')), 
+          );
+        }
+      }
+    }
   }
 
   // ---- 自动同步 ----

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants.dart';
@@ -68,7 +69,7 @@ class OAuthManager {
         return newAccessToken;
       }
     } catch (e) {
-      print('刷新token失败: $e');
+      debugPrint('刷新token失败: $e');
     }
     return null;
   }
@@ -121,7 +122,7 @@ class OAuthManager {
         return true;
       }
     } catch (e) {
-      print('交换授权码失败: $e');
+      debugPrint('交换授权码失败: $e');
     }
     return false;
   }

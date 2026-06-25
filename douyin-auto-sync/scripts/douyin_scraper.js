@@ -74,10 +74,10 @@ async function scrapeDouyinData() {
 
     // 确保下载目录存在
     fs.ensureDirSync(downloadDir);
-    // 清理旧的导出文件
+    // 备份旧的导出文件(不清除,保留给auto_import使用)
     const oldFiles = fs.readdirSync(downloadDir).filter(f => f.endsWith('.csv'));
-    for (const file of oldFiles) {
-      fs.removeSync(path.join(downloadDir, file));
+    if (oldFiles.length > 0) {
+      log('INFO', `发现 ${oldFiles.length} 个旧CSV文件，将保留`);
     }
 
     log('INFO', `启动浏览器 (下载目录: ${downloadDir})`);
@@ -311,18 +311,21 @@ async function scrapeDouyinData() {
       log('INFO', '请手动下载CSV文件到 data/downloads 目录');
     }
 
-    // 9. 自动导入数据
-    log('INFO', '开始自动导入数据...');
+    // 9. 自动导入数据(包括数据库)
+    log('INFO', '开始自动导入数据到数据库...');
     try {
-      const { findLatestCsv, transformData, writeDataJson, parseCsv } = require('./auto_import');
-      const latestCsv = findLatestCsv();
-      if (latestCsv) {
-        const { rows } = parseCsv(latestCsv.path);
-        const videos = transformData(rows);
-        if (videos.length > 0) {
-          writeDataJson(videos);
-          log('INFO', `成功导入 ${videos.length} 条视频数据`);
-        }
+      // 调用auto_import的完整流程
+      const { spawnSync } = require('child_process');
+      
+      const result = spawnSync('node', [path.join(__dirname, 'auto_import.js')], {
+        cwd: BASE_DIR,
+        stdio: 'inherit'
+      });
+      
+      if (result.status === 0) {
+        log('INFO', '数据导入成功');
+      } else {
+        log('WARN', `数据导入失败，退出码: ${result.status}`);
       }
     } catch (importError) {
       log('WARN', `自动导入失败: ${importError.message}`);

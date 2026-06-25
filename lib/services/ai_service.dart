@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../security/secure_logger.dart';
 
 class AiService {
   AiService._();
@@ -8,25 +11,33 @@ class AiService {
 
   static const String _endpoint = 'https://api.siliconflow.cn/v1/chat/completions';
   static const String _defaultModel = 'Qwen/Qwen2.5-7B-Instruct';
+  static const String _apiKeyStorageKey = 'siliconflow_api_key_secure';
+  static const String _modelStorageKey = 'siliconflow_model_secure';
+
+  final _secureStorage = const FlutterSecureStorage();
 
   Future<String?> _getApiKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('siliconflow_api_key');
+    final key = await _secureStorage.read(key: _apiKeyStorageKey);
+    return key;
   }
 
   Future<String> _getModel() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('siliconflow_model') ?? _defaultModel;
+    final model = await _secureStorage.read(key: _modelStorageKey);
+    return model ?? _defaultModel;
   }
 
   Future<void> updateApiKey(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('siliconflow_api_key', key);
+    if (key.isEmpty) {
+      await _secureStorage.delete(key: _apiKeyStorageKey);
+      SecureLogger.instance.info('API Key 已删除', event: SecurityEventType.apiKeyDeleted);
+    } else {
+      await _secureStorage.write(key: _apiKeyStorageKey, value: key);
+      SecureLogger.instance.info('API Key 已保存', event: SecurityEventType.apiKeySaved);
+    }
   }
 
   Future<void> setModel(String model) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('siliconflow_model', model);
+    await _secureStorage.write(key: _modelStorageKey, value: model);
   }
 
   Future<void> _incrementUsage() async {
@@ -88,10 +99,9 @@ class AiService {
       }
     } on http.ClientException {
       return '网络连接失败，请检查网络后重试。';
+    } on TimeoutException {
+      return '请求超时，AI 服务响应较慢，请稍后重试。';
     } catch (e) {
-      if (e.toString().contains('TimeoutException')) {
-        return '请求超时，AI 服务响应较慢，请稍后重试。';
-      }
       return 'AI 服务异常: $e';
     }
   }
@@ -421,7 +431,7 @@ class AiService {
         : <Map<String, dynamic>>[];
 
     final sortedByFinish = List<Map<String, dynamic>>.from(videos)
-      ..where((v) => (v['finish_rate'] ?? 0) > 0)
+      .where((v) => (v['finish_rate'] ?? 0) > 0)
       .toList()
       ..sort((a, b) =>
           ((b['finish_rate'] ?? 0).compareTo((a['finish_rate'] ?? 0))));

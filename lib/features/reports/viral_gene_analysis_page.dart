@@ -31,13 +31,15 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
   Map<String, dynamic> _interactionAnalysis = {};
   // 质量评分特征
   Map<String, dynamic> _qualityAnalysis = {};
+  // 流量来源分析
+  Map<String, double> _trafficAnalysis = {};
   // 标题关键词
   List<_KeywordCount> _topKeywords = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _loadData();
   }
 
@@ -74,6 +76,7 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
       _allVideos = videos;
 
       if (videos.isEmpty) {
+        if (!mounted) return;
         setState(() => _loading = false);
         return;
       }
@@ -111,8 +114,10 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
       // 7. 标题关键词
       _analyzeKeywords(withScores);
 
+      if (!mounted) return;
       setState(() => _loading = false);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
         _error = e.toString();
@@ -360,6 +365,13 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
       avgFollow /= count;
       avgCity /= count;
     }
+
+    _trafficAnalysis = {
+      'recommend': avgRecommend,
+      'search': avgSearch,
+      'follow': avgFollow,
+      'city': avgCity,
+    };
   }
 
   void _analyzeKeywords(List<Map<String, dynamic>> videos) {
@@ -417,6 +429,7 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
             Tab(text: '完播特征'),
             Tab(text: '互动特征'),
             Tab(text: '质量分布'),
+            Tab(text: '流量来源'),
             Tab(text: '标题关键词'),
           ],
         ),
@@ -435,6 +448,7 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
                         _buildFinishRateTab(),
                         _buildInteractionTab(),
                         _buildQualityTab(),
+                        _buildTrafficTab(),
                         _buildKeywordsTab(),
                       ],
                     ),
@@ -794,6 +808,127 @@ class _ViralGeneAnalysisPageState extends ConsumerState<ViralGeneAnalysisPage> w
         ],
       ),
     );
+  }
+
+  Widget _buildTrafficTab() {
+    final hasData = _trafficAnalysis.isNotEmpty &&
+        (_trafficAnalysis['recommend']! > 0 ||
+            _trafficAnalysis['search']! > 0 ||
+            _trafficAnalysis['follow']! > 0 ||
+            _trafficAnalysis['city']! > 0);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('爆款视频流量来源分布'),
+          const SizedBox(height: 12),
+          if (!hasData)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text('暂无流量来源数据', style: TextStyle(color: Colors.grey[500])),
+              ),
+            )
+          else
+            Column(
+              children: [
+                _buildTrafficBar('推荐流量', _trafficAnalysis['recommend'] ?? 0, Colors.blue),
+                const SizedBox(height: 12),
+                _buildTrafficBar('搜索流量', _trafficAnalysis['search'] ?? 0, Colors.green),
+                const SizedBox(height: 12),
+                _buildTrafficBar('关注流量', _trafficAnalysis['follow'] ?? 0, Colors.purple),
+                const SizedBox(height: 12),
+                _buildTrafficBar('同城流量', _trafficAnalysis['city'] ?? 0, Colors.orange),
+              ],
+            ),
+          const SizedBox(height: 24),
+          _buildSectionTitle('流量结构洞察'),
+          const SizedBox(height: 12),
+          if (!hasData)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('数据不足', style: TextStyle(color: Colors.grey[500])),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.lightbulb, color: Colors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('流量结构分析', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _buildTrafficInsight(),
+                    style: const TextStyle(height: 1.6, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrafficBar(String label, double value, Color color) {
+    final total = (_trafficAnalysis['recommend'] ?? 0) +
+        (_trafficAnalysis['search'] ?? 0) +
+        (_trafficAnalysis['follow'] ?? 0) +
+        (_trafficAnalysis['city'] ?? 0);
+    final pct = total > 0 ? (value / total * 100) : 0.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 14)),
+            Text('${value.toStringAsFixed(1)}% (占比 ${pct.toStringAsFixed(1)}%)', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: total > 0 ? value / 100 : 0,
+            backgroundColor: color.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _buildTrafficInsight() {
+    final recommend = _trafficAnalysis['recommend'] ?? 0;
+    final search = _trafficAnalysis['search'] ?? 0;
+    final follow = _trafficAnalysis['follow'] ?? 0;
+
+    if (recommend >= 60) {
+      return '爆款视频高度依赖推荐流量（${recommend.toStringAsFixed(1)}%），说明内容质量高，算法推荐力度大。建议持续优化完播率和互动率，巩固推荐流量优势。';
+    } else if (search >= 30) {
+      return '搜索流量占比达${search.toStringAsFixed(1)}%，说明账号关键词布局优秀，搜索流量稳定。建议继续优化标题关键词，提升搜索曝光。';
+    } else if (follow >= 20) {
+      return '关注流量占比${follow.toStringAsFixed(1)}%，粉丝粘性强，私域流量健康。建议加强粉丝互动，提升粉丝活跃度和忠诚度。';
+    } else {
+      return '流量结构较为均衡，各渠道均有贡献。建议重点提升推荐流量占比，同时布局搜索关键词，双轮驱动增长。';
+    }
   }
 
   Widget _buildKeywordsTab() {

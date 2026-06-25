@@ -205,10 +205,10 @@ class VideoQualityAnalyzer {
   /// 计算百分位排名
   static double calculatePercentile(List<double> values, double target) {
     if (values.isEmpty) return 0;
-    values.sort();
-    int index = values.indexWhere((v) => v >= target);
+    final sorted = List<double>.from(values)..sort();
+    int index = sorted.indexWhere((v) => v >= target);
     if (index == -1) return 100;
-    return (index / values.length) * 100;
+    return (index / sorted.length) * 100;
   }
 
   /// 发布时间分析 - 统计各时段发布的视频平均播放量
