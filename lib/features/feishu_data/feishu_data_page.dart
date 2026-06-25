@@ -14,8 +14,11 @@ class FeishuDataPage extends ConsumerStatefulWidget {
 
 class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
   final FeishuService _feishuService = FeishuService(AppDatabase());
+  final AppDatabase _db = AppDatabase();
   List<FeishuDouyinMetric> _metrics = [];
   bool _loading = false;
+  bool _importing = false;
+  int _importedCount = 0;
   String? _error;
   bool _notConfigured = false;
 
@@ -65,16 +68,143 @@ class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
     }
   }
 
+  /// 自动导入飞书数据到本地数据库
+  Future<void> _importToDatabase() async {
+    if (_metrics.isEmpty) return;
+
+    setState(() {
+      _importing = true;
+      _importedCount = 0;
+    });
+
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      int count = 0;
+
+      for (final m in _metrics) {
+        // 生成视频 ID（如果没有）
+        final videoId = m.videoId.isNotEmpty 
+            ? m.videoId 
+            : 'feishu_${now}_${count}';
+
+        // 插入视频基础信息
+        await _db.upsertVideo(
+          id: videoId,
+          title: m.videoTitle.isNotEmpty ? m.videoTitle : '视频 #${count + 1}',
+          createTime: _parseDate(m.publishDate),
+          source: 'feishu',
+          sourceId: m.videoId,
+        );
+
+        // 插入指标数据
+        await _db.upsertMetrics(
+          videoId: videoId,
+          playCount: m.playCount,
+          likeCount: m.likeCount,
+          commentCount: m.commentCount,
+          shareCount: m.shareCount,
+          collectCount: m.collectCount,
+          finishRate: m.finishRate,
+          avgWatchDuration: m.avgWatchDuration,
+          twoSecondExitRate: m.twoSecondExitRate,
+          coverCtr: m.coverCtr,
+          profileVisits: m.profileVisits,
+          fullPlayCount: m.fullPlayCount,
+          fiveSecondFinishRate: m.fiveSecondFinishRate,
+          newFollowers: m.newFollowers,
+          totalDuration: m.totalDuration,
+          trafficRecommend: m.trafficRecommend,
+          trafficSearch: m.trafficSearch,
+          trafficFollow: m.trafficFollow,
+          trafficCity: m.trafficCity,
+          trafficProfile: m.trafficProfile,
+          trafficHotspot: m.trafficHotspot,
+          trafficDoujia: m.trafficDoujia,
+          audienceMaleRatio: m.audienceMaleRatio,
+          audienceAgeDist: m.audienceAgeDist,
+          audienceRegionDist: m.audienceRegionDist,
+          audienceTgi: null,
+          likeRate: m.likeRate,
+          commentRate: m.commentRate,
+          shareRate: m.shareRate,
+          collectRate: m.collectRate,
+          interactionRate: m.interactionRate,
+          fetchedAt: now,
+          source: 'feishu',
+        );
+        count++;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _importing = false;
+        _importedCount = count;
+      });
+
+      // 显示成功提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('成功导入 $count 条视频数据'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _importing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('导入失败: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// 解析日期字符串为时间戳
+  int _parseDate(String dateStr) {
+    if (dateStr.isEmpty) return DateTime.now().millisecondsSinceEpoch;
+    
+    // 尝试解析数字时间戳
+    final numVal = int.tryParse(dateStr);
+    if (numVal != null) {
+      if (numVal > 1e12) return numVal;
+      if (numVal > 1e9) return numVal * 1000;
+      return numVal;
+    }
+    
+    // 尝试解析日期格式
+    final dt = DateTime.tryParse(dateStr);
+    if (dt != null) return dt.millisecondsSinceEpoch;
+    
+    return DateTime.now().millisecondsSinceEpoch;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('飞书数据'),
         actions: [
+          if (!_notConfigured && _metrics.isNotEmpty)
+            IconButton(
+              icon: _importing 
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download),
+              onPressed: _importing ? null : _importToDatabase,
+              tooltip: '导入到本地数据库',
+            ),
           if (!_notConfigured)
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: _loading ? null : _loadData,
+              onPressed: _loading || _importing ? null : _loadData,
               tooltip: '刷新数据',
             ),
         ],
