@@ -240,8 +240,11 @@ class AppDatabase {
         m.play_count, m.like_count, m.comment_count, m.share_count, m.collect_count,
         m.finish_rate, m.avg_watch_duration, m.two_second_exit_rate, m.cover_ctr,
         m.profile_visits, m.full_play_count, m.five_second_finish_rate,
+        m.new_followers, m.total_duration,
         m.traffic_recommend, m.traffic_search, m.traffic_follow, m.traffic_city,
+        m.traffic_profile, m.traffic_hotspot, m.traffic_doujia,
         m.audience_male_ratio, m.audience_age_dist, m.audience_region_dist, m.audience_tgi,
+        m.like_rate, m.comment_rate, m.share_rate, m.collect_rate, m.interaction_rate,
         m.fetched_at, m.source as metric_source, m.updated_at
       FROM videos v
       LEFT JOIN video_metrics m ON m.video_id = v.id
@@ -414,10 +417,20 @@ class AppDatabase {
         'avg_five_second_finish_rate': 0.0,
         'total_profile_visits': 0,
         'total_full_plays': 0,
+        'total_new_followers': 0,
+        'avg_like_rate': 0.0,
+        'avg_comment_rate': 0.0,
+        'avg_share_rate': 0.0,
+        'avg_collect_rate': 0.0,
+        'avg_interaction_rate': 0.0,
         'traffic_recommend': 0.0,
         'traffic_search': 0.0,
         'traffic_follow': 0.0,
         'traffic_city': 0.0,
+        'traffic_profile': 0.0,
+        'traffic_hotspot': 0.0,
+        'traffic_doujia': 0.0,
+        'avg_audience_male_ratio': 0.0,
       };
     }
     final stats = await db.rawQuery('''
@@ -439,10 +452,20 @@ class AppDatabase {
         COALESCE(AVG(m.five_second_finish_rate), 0) as avg_five_second_finish_rate,
         COALESCE(SUM(m.profile_visits), 0) as total_profile_visits,
         COALESCE(SUM(m.full_play_count), 0) as total_full_plays,
+        COALESCE(SUM(m.new_followers), 0) as total_new_followers,
+        COALESCE(AVG(m.like_rate), 0) as avg_like_rate,
+        COALESCE(AVG(m.comment_rate), 0) as avg_comment_rate,
+        COALESCE(AVG(m.share_rate), 0) as avg_share_rate,
+        COALESCE(AVG(m.collect_rate), 0) as avg_collect_rate,
+        COALESCE(AVG(m.interaction_rate), 0) as avg_interaction_rate,
         COALESCE(AVG(m.traffic_recommend), 0) as traffic_recommend,
         COALESCE(AVG(m.traffic_search), 0) as traffic_search,
         COALESCE(AVG(m.traffic_follow), 0) as traffic_follow,
-        COALESCE(AVG(m.traffic_city), 0) as traffic_city
+        COALESCE(AVG(m.traffic_city), 0) as traffic_city,
+        COALESCE(AVG(m.traffic_profile), 0) as traffic_profile,
+        COALESCE(AVG(m.traffic_hotspot), 0) as traffic_hotspot,
+        COALESCE(AVG(m.traffic_doujia), 0) as traffic_doujia,
+        COALESCE(AVG(m.audience_male_ratio), 0) as avg_audience_male_ratio
       FROM video_metrics m
       INNER JOIN videos v ON v.id = m.video_id
     ''');
@@ -466,10 +489,20 @@ class AppDatabase {
       'avg_five_second_finish_rate': (row['avg_five_second_finish_rate'] as double?) ?? 0.0,
       'total_profile_visits': (row['total_profile_visits'] as int?) ?? 0,
       'total_full_plays': (row['total_full_plays'] as int?) ?? 0,
+      'total_new_followers': (row['total_new_followers'] as int?) ?? 0,
+      'avg_like_rate': (row['avg_like_rate'] as double?) ?? 0.0,
+      'avg_comment_rate': (row['avg_comment_rate'] as double?) ?? 0.0,
+      'avg_share_rate': (row['avg_share_rate'] as double?) ?? 0.0,
+      'avg_collect_rate': (row['avg_collect_rate'] as double?) ?? 0.0,
+      'avg_interaction_rate': (row['avg_interaction_rate'] as double?) ?? 0.0,
       'traffic_recommend': (row['traffic_recommend'] as double?) ?? 0.0,
       'traffic_search': (row['traffic_search'] as double?) ?? 0.0,
       'traffic_follow': (row['traffic_follow'] as double?) ?? 0.0,
       'traffic_city': (row['traffic_city'] as double?) ?? 0.0,
+      'traffic_profile': (row['traffic_profile'] as double?) ?? 0.0,
+      'traffic_hotspot': (row['traffic_hotspot'] as double?) ?? 0.0,
+      'traffic_doujia': (row['traffic_doujia'] as double?) ?? 0.0,
+      'avg_audience_male_ratio': (row['avg_audience_male_ratio'] as double?) ?? 0.0,
     };
   }
 

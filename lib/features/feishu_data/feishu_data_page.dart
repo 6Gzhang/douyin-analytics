@@ -18,7 +18,6 @@ class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
   List<FeishuDouyinMetric> _metrics = [];
   bool _loading = false;
   bool _importing = false;
-  int _importedCount = 0;
   String? _error;
   bool _notConfigured = false;
 
@@ -92,6 +91,7 @@ class _FeishuDataPageState extends ConsumerState<FeishuDataPage> {
           id: videoId,
           title: m.videoTitle.isNotEmpty ? m.videoTitle : '视频 #${count + 1}',
           createTime: _parseDate(m.publishDate),
+          duration: m.totalDuration,
           source: 'feishu',
           sourceId: m.videoId,
         );
